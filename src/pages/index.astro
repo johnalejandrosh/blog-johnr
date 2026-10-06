@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import LabTeaser from '../components/LabTeaser.astro';
 import StarChart from '../components/StarChart.astro';
 import MoonPhase from '../components/MoonPhase.astro';
 import Newsletter from '../components/Newsletter.astro';
@@ -37,6 +38,10 @@ const topics = CATEGORIES.map((c) => ({ ...c, count: byCategory(posts, c.slug).l
 	</PageHero>
 
 	<div class="container">
+		<div class="section section--tight">
+			<LabTeaser />
+		</div>
+
 		<div class="shell section">
 			<div>
 				{

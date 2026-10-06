@@ -1,0 +1,308 @@
+---
+// Un Linux de verdad dentro del navegador: v86 emula un PC x86 en WebAssembly
+// y arranca un kernel con busybox. Todo corre en la máquina del visitante; el
+// sitio solo sirve archivos. El emulador y xterm.js se descargan al pulsar
+// "iniciar", así que la página pesa lo mismo que cualquier otra hasta entonces.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import LabHelp from '../components/LabHelp.astro';
+import { SITE_TITLE } from '../consts';
+import '@xterm/xterm/css/xterm.css';
+
+const TRY = [
+	['uname -a', 'kernel y arquitectura'],
+	['ls /', 'el sistema de archivos'],
+	['cat /proc/cpuinfo', 'la CPU que v86 finge ser'],
+	['free -m', 'memoria de la máquina virtual'],
+	['top', 'procesos (q para salir)'],
+	["lua -e 'print(2^10)'", 'hay Lua instalado'],
+	['vi hola.txt', 'sí, hay vi (:q! para salir)'],
+	['rm -rf /', 'adelante: se arregla recargando'],
+];
+---
+
+<BaseLayout
+	title={`Lab · ${SITE_TITLE}`}
+	description="Un Linux de verdad corriendo dentro de tu navegador con v86. Nada sale de tu computador y lo que rompas se arregla recargando."
+>
+	<PageHero command="./arrancar-linux.sh" path="lab">
+		<h1 class="page-hero__title">Un Linux de verdad, dentro de tu navegador.</h1>
+		<div class="page-hero__text">
+			<p>
+				No es una simulación como la de la portada: es un PC x86 emulado en WebAssembly con{' '}
+				<a class="text-link" href="https://github.com/copy/v86" rel="noopener">v86</a> que arranca un
+				kernel Linux con busybox. Corre entero en tu computador, no hay ningún servidor al otro lado y
+				nada de lo que escribas sale de esta pestaña. Si lo rompes, recargas y queda como nuevo.
+			</p>
+		</div>
+	</PageHero>
+
+	<div class="container section section--last" data-lab>
+		<div class="shell">
+			<div class="terminal lab__window">
+				<div class="terminal__bar">
+					<span class="terminal__lights" aria-hidden="true">
+						<span class="terminal__light terminal__light--close">×</span>
+						<span class="terminal__light terminal__light--min">−</span>
+						<span class="terminal__light terminal__light--max">+</span>
+					</span>
+					<span class="terminal__title" data-lab-title>root — v86 — apagada</span>
+					<button
+						class="terminal__help"
+						type="button"
+						aria-label="Qué es esto y cómo funciona"
+						title="Qué es esto y cómo funciona"
+						data-lab-help-open
+					>
+						<Icon name="circle-help" size={14} />
+					</button>
+				</div>
+
+				<div class="lab__screen">
+					<div class="lab__start" data-lab-start>
+						<p class="lab__start-title">La máquina está apagada.</p>
+						<p class="lab__start-text">
+							Al iniciarla se descargan unos 13 MB (emulador, consola, BIOS y kernel Linux). Arranca en 5 a 20
+							segundos según tu equipo.
+						</p>
+						<button class="button button--primary" type="button" data-lab-boot>iniciar máquina</button>
+					</div>
+					<div class="lab__xterm" data-lab-xterm hidden></div>
+				</div>
+
+				<div class="lab__status">
+					<span data-lab-status role="status" aria-live="polite">apagada</span>
+					<progress class="lab__progress" max="1" value="0" data-lab-progress hidden></progress>
+				</div>
+			</div>
+
+			<aside class="rail" aria-label="Sobre el laboratorio">
+				<div class="card card--pad">
+					<span class="eyebrow">prueba esto</span>
+					<ul class="lab__try">
+						{
+							TRY.map(([cmd, desc]) => (
+								<li>
+									<code>{cmd}</code>
+									<span>{desc}</span>
+								</li>
+							))
+						}
+					</ul>
+				</div>
+
+				<div class="card card--pad">
+					<span class="eyebrow">cómo funciona</span>
+					<p class="card__text">
+						v86 traduce el código máquina x86 a WebAssembly sobre la marcha. La BIOS es SeaBIOS y el
+						sistema es un kernel Linux con busybox compilado con Buildroot. La consola es el puerto
+						serie de la máquina, conectado a xterm.js.
+					</p>
+					<p class="card__text">
+						No hay red ni disco persistente: al recargar todo vuelve a empezar. Si cambias de pestaña,
+						la máquina se pausa para no gastarte batería.
+					</p>
+					<button class="text-link lab__more" type="button" data-lab-help-open>
+						cómo funciona y créditos →
+					</button>
+					<button class="button button--sm lab__restart" type="button" data-lab-restart hidden>
+						reiniciar máquina
+					</button>
+				</div>
+			</aside>
+		</div>
+	</div>
+
+	<LabHelp />
+</BaseLayout>
+
+<script>
+	// BIOS y kernel se sirven desde este mismo sitio: scripts/lab-images.mjs
+	// los deja en public/lab/ antes de cada build.
+	const BIOS = '/lab';
+	const KERNEL = '/lab/buildroot-bzimage68.bin';
+	const PROMPT = '~% ';
+
+	const root = document.querySelector<HTMLElement>('[data-lab]');
+
+	if (root) {
+		const start = root.querySelector<HTMLElement>('[data-lab-start]')!;
+		const bootButton = root.querySelector<HTMLButtonElement>('[data-lab-boot]')!;
+		const restartButton = root.querySelector<HTMLButtonElement>('[data-lab-restart]')!;
+		const screen = root.querySelector<HTMLElement>('[data-lab-xterm]')!;
+		const status = root.querySelector<HTMLElement>('[data-lab-status]')!;
+		const progress = root.querySelector<HTMLProgressElement>('[data-lab-progress]')!;
+		const title = root.querySelector<HTMLElement>('[data-lab-title]')!;
+		const windowEl = root.querySelector<HTMLElement>('.lab__window')!;
+
+		// Tipos mínimos: v86 y xterm llegan con import() dinámico.
+		type Emulator = {
+			add_listener(event: string, fn: (data: any) => void): void;
+			serial0_send(data: string): void;
+			destroy(): Promise<void>;
+			run(): Promise<void>;
+			stop(): Promise<void>;
+			is_running(): boolean;
+		};
+
+		let emulator: Emulator | null = null;
+		let term: import('@xterm/xterm').Terminal | null = null;
+		let ready = false;
+
+		const setStatus = (text: string, state = 'apagada') => {
+			status.textContent = text;
+			title.textContent = `root — v86 — ${state}`;
+		};
+
+		const mb = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
+
+		const createTerminal = async () => {
+			const [{ Terminal }, { FitAddon }] = await Promise.all([import('@xterm/xterm'), import('@xterm/addon-fit')]);
+			// Los colores salen de los tokens del sitio para que la consola se vea
+			// igual que la terminal de la portada.
+			const css = getComputedStyle(windowEl);
+			const token = (name: string) => css.getPropertyValue(name).trim();
+			const instance = new Terminal({
+				fontFamily: getComputedStyle(screen).fontFamily,
+				fontSize: window.matchMedia('(max-width: 520px)').matches ? 12 : 14,
+				cursorBlink: true,
+				theme: {
+					background: token('--term-bg'),
+					foreground: token('--term-ink'),
+					cursor: token('--term-ink'),
+					selectionBackground: 'rgba(232, 151, 90, 0.35)',
+					blue: token('--term-path'),
+					brightBlue: token('--term-path'),
+					green: token('--term-user'),
+					brightGreen: token('--term-user'),
+				},
+			});
+			const fit = new FitAddon();
+			instance.loadAddon(fit);
+			screen.hidden = false;
+			instance.open(screen);
+			fit.fit();
+			new ResizeObserver(() => fit.fit()).observe(screen);
+			instance.onData((data) => emulator?.serial0_send(data));
+			return instance;
+		};
+
+		const boot = async () => {
+			bootButton.disabled = true;
+			setStatus('cargando el emulador…', 'arrancando');
+
+			let V86: new (options: Record<string, unknown>) => Emulator;
+			let wasmUrl: string;
+			try {
+				const [lib, wasm] = await Promise.all([import('v86'), import('v86/build/v86.wasm?url')]);
+				V86 = lib.V86 as unknown as typeof V86;
+				wasmUrl = wasm.default;
+				term ??= await createTerminal();
+			} catch {
+				setStatus('no se pudo cargar el emulador. Revisa tu conexión y vuelve a intentarlo.');
+				bootButton.disabled = false;
+				return;
+			}
+
+			start.hidden = true;
+			term.reset();
+			ready = false;
+
+			emulator = new V86({
+				wasm_path: wasmUrl,
+				memory_size: 128 * 1024 * 1024,
+				bios: { url: `${BIOS}/seabios.bin` },
+				vga_bios: { url: `${BIOS}/vgabios.bin` },
+				bzimage: { url: KERNEL, async: false },
+				filesystem: {},
+				cmdline: 'tsc=reliable mitigations=off random.trust_cpu=on',
+				autostart: true,
+				disable_keyboard: true,
+				disable_mouse: true,
+				disable_speaker: true,
+			});
+
+			emulator.add_listener('download-progress', (e) => {
+				progress.hidden = false;
+				if (e.lengthComputable) {
+					progress.value = e.loaded / e.total;
+					setStatus(`descargando ${e.file_name.split('/').pop()} · ${mb(e.loaded)} de ${mb(e.total)} MB`, 'descargando');
+				} else {
+					progress.removeAttribute('value');
+					setStatus(`descargando ${e.file_name.split('/').pop()}…`, 'descargando');
+				}
+			});
+
+			// Si algo no baja, se apaga todo y el botón queda listo para reintentar.
+			emulator.add_listener('download-error', (e) => {
+				progress.hidden = true;
+				const failed = emulator;
+				emulator = null;
+				failed?.destroy();
+				start.hidden = false;
+				bootButton.disabled = false;
+				bootButton.textContent = 'reintentar';
+				setStatus(`falló la descarga de ${e.file_name.split('/').pop()}. Revisa tu conexión y vuelve a intentarlo.`);
+			});
+
+			emulator.add_listener('emulator-loaded', () => {
+				progress.hidden = true;
+				setStatus('arrancando Linux…', 'arrancando');
+			});
+
+			// La salida del puerto serie llega byte a byte; se agrupa por frame
+			// para no pintar xterm miles de veces por segundo.
+			let pending: number[] = [];
+			let frame = 0;
+			let tail = '';
+			const flush = () => {
+				term?.write(new Uint8Array(pending));
+				pending = [];
+				frame = 0;
+			};
+
+			emulator.add_listener('serial0-output-byte', (byte: number) => {
+				pending.push(byte);
+				if (!frame) frame = requestAnimationFrame(flush);
+
+				if (ready) return;
+				tail = (tail + String.fromCharCode(byte)).slice(-PROMPT.length);
+				if (tail === PROMPT) {
+					ready = true;
+					setStatus('lista · escribe en la consola', 'encendida');
+					restartButton.hidden = false;
+					// El kernel no sabe el tamaño de la ventana: se lo decimos
+					// una vez y limpiamos la pantalla.
+					const { cols, rows } = term!;
+					emulator?.serial0_send(
+						`stty cols ${cols} rows ${rows}; clear; echo 'Linux real en tu navegador. Prueba: uname -a, ls /, top'\n`,
+					);
+					term?.focus();
+				}
+			});
+		};
+
+		bootButton.addEventListener('click', boot);
+
+		restartButton.addEventListener('click', async () => {
+			restartButton.hidden = true;
+			const old = emulator;
+			emulator = null;
+			await old?.destroy();
+			boot();
+		});
+
+		// Pestaña oculta = máquina en pausa; no tiene sentido quemar CPU.
+		document.addEventListener('visibilitychange', () => {
+			if (!emulator || !ready) return;
+			if (document.hidden) {
+				emulator.stop();
+				setStatus('en pausa (pestaña oculta)', 'en pausa');
+			} else {
+				emulator.run();
+				setStatus('lista · escribe en la consola', 'encendida');
+			}
+		});
+	}
+</script>

@@ -6,6 +6,9 @@ dist/
 # dependencies
 node_modules/
 
+# imágenes de /lab: las descarga scripts/lab-images.mjs
+public/lab/*.bin
+
 # logs
 npm-debug.log*
 yarn-debug.log*
