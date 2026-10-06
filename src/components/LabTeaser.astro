@@ -1,0 +1,20 @@
+---
+// Invitación a /lab, en la portada y en la 404. Toda la tarjeta es clicable:
+// el enlace del botón se estira por encima con ::after.
+---
+
+<section class="lab-teaser" aria-labelledby="lab-teaser-title">
+	<div class="lab-teaser__copy">
+		<span class="lab-teaser__badge">
+			<span class="live-dot" aria-hidden="true"></span> nuevo · lab
+		</span>
+		<h2 class="lab-teaser__title" id="lab-teaser-title">
+			Un Linux de verdad, corriendo en tu navegador.<span class="lab-teaser__cursor" aria-hidden="true"></span>
+		</h2>
+		<p class="lab-teaser__text">
+			Kernel 6.8 con BusyBox y una consola real, todo emulado en WebAssembly. No hay ningún servidor
+			detrás: escribe lo que quieras, incluso <code>rm -rf /</code>. Se arregla recargando.
+		</p>
+	</div>
+	<a class="button button--primary lab-teaser__cta" href="/lab">arrancar Linux</a>
+</section>

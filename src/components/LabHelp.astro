@@ -1,0 +1,186 @@
+---
+// Ayuda de /lab: qué es, cómo funciona, cómo se usa y quién lo hizo posible.
+// Es un <dialog> nativo: Esc lo cierra y el foco vuelve solo al botón que lo
+// abrió. Cualquier elemento con `data-lab-help-open` lo abre.
+import Icon from './Icon.astro';
+
+const CREDITS = [
+	{
+		name: 'v86',
+		href: 'https://github.com/copy/v86',
+		license: 'BSD-2-Clause',
+		what: 'El emulador: CPU x86, memoria, BIOS, puerto serie y el resto del PC, compilados a WebAssembly. Creado por Fabian Hemmer (copy) y mantenido por los colaboradores del proyecto.',
+	},
+	{
+		name: 'Linux 6.8',
+		href: 'https://www.kernel.org/',
+		license: 'GPL-2.0',
+		what: 'El kernel que arranca la máquina.',
+	},
+	{
+		name: 'BusyBox',
+		href: 'https://busybox.net/',
+		license: 'GPL-2.0',
+		what: 'La shell y casi todos los comandos (ls, top, vi, free…) en un solo binario.',
+	},
+	{
+		name: 'Buildroot',
+		href: 'https://buildroot.org/',
+		license: 'GPL-2.0',
+		what: 'Con lo que se compiló la imagen de Linux. La imagen es la que publica el proyecto v86.',
+	},
+	{
+		name: 'SeaBIOS y SeaVGABIOS',
+		href: 'https://www.seabios.org/',
+		license: 'LGPL-3.0',
+		what: 'La BIOS y la BIOS de vídeo con las que enciende el PC virtual.',
+	},
+	{
+		name: 'xterm.js',
+		href: 'https://xtermjs.org/',
+		license: 'MIT',
+		what: 'La consola en la que escribes, la misma que usa VS Code.',
+	},
+];
+
+const INSIDE_V86 = [
+	{ name: 'Berkeley SoftFloat', href: 'http://www.jhauser.us/arithmetic/SoftFloat.html' },
+	{ name: 'zstd', href: 'https://github.com/facebook/zstd' },
+	{ name: 'jor1k', href: 'https://github.com/s-macke/jor1k' },
+	{ name: 'QEMU', href: 'https://www.qemu.org/' },
+	{ name: 'kvm-unit-tests', href: 'https://www.linux-kvm.org/page/KVM-unit-tests' },
+];
+---
+
+<dialog class="lab-help" aria-labelledby="lab-help-title" data-lab-help>
+	<header class="lab-help__header">
+		<p class="lab-help__man" aria-hidden="true">
+			<span>LAB(1)</span><span>Manual del laboratorio</span><span>LAB(1)</span>
+		</p>
+		<button class="lab-help__close" type="button" aria-label="Cerrar la ayuda" data-lab-help-close>
+			<Icon name="x" size={16} />
+		</button>
+	</header>
+
+	<div class="lab-help__body">
+		<section>
+			<h2 class="lab-help__heading" id="lab-help-title">nombre</h2>
+			<p>
+				<strong>lab</strong> — un PC de verdad, con Linux, corriendo dentro de esta pestaña.
+			</p>
+		</section>
+
+		<section>
+			<h2 class="lab-help__heading">qué es</h2>
+			<p>
+				No es una animación ni una terminal de mentira como la de la portada. Es un computador x86
+				completo (procesador, memoria, BIOS, puerto serie) emulado en tu navegador, que arranca un
+				kernel Linux 6.8 de verdad con BusyBox. Lo que escribes lo ejecuta ese Linux.
+			</p>
+		</section>
+
+		<section>
+			<h2 class="lab-help__heading">cómo funciona</h2>
+			<ol class="lab-help__steps">
+				<li>
+					Al pulsar <em>iniciar máquina</em> se descarga el emulador (v86, unos 2 MB de WebAssembly),
+					la BIOS y el kernel (unos 10 MB). Antes de eso no se descarga nada.
+				</li>
+				<li>
+					v86 lee las instrucciones x86 del kernel y las traduce a WebAssembly sobre la marcha, como
+					un compilador JIT. Tu navegador ejecuta ese código casi a velocidad nativa.
+				</li>
+				<li>
+					El PC virtual enciende con SeaBIOS, carga el kernel y arranca BusyBox, que te deja en la
+					shell como root.
+				</li>
+				<li>
+					La consola está conectada al puerto serie de la máquina: cada tecla viaja por ese cable
+					virtual y la respuesta vuelve por el mismo camino hasta xterm.js.
+				</li>
+			</ol>
+		</section>
+
+		<section>
+			<h2 class="lab-help__heading">es seguro</h2>
+			<p>
+				Todo pasa en tu computador. No hay ningún servidor ejecutando tus comandos, la máquina no
+				tiene red y nada sale de esta pestaña. Tampoco hay disco persistente: al recargar vuelve a
+				empezar desde cero, así que puedes romperlo sin miedo, <code>rm -rf /</code> incluido.
+			</p>
+		</section>
+
+		<section>
+			<h2 class="lab-help__heading">uso</h2>
+			<dl class="lab-help__keys">
+				<dt><kbd>Ctrl</kbd> + <kbd>C</kbd></dt>
+				<dd>corta el programa que está corriendo (top, ping…)</dd>
+				<dt><kbd>Ctrl</kbd> + <kbd>L</kbd></dt>
+				<dd>limpia la pantalla</dd>
+				<dt><kbd>↑</kbd> <kbd>↓</kbd></dt>
+				<dd>historial de comandos</dd>
+				<dt>copiar y pegar</dt>
+				<dd>
+					selecciona y usa el clic derecho (en Mac, <kbd>⌘</kbd> + <kbd>C</kbd> y <kbd>⌘</kbd> + <kbd>V</kbd>).
+					Aquí <kbd>Ctrl</kbd> + <kbd>C</kbd> no copia: corta el programa
+				</dd>
+				<dt>cambiar de pestaña</dt>
+				<dd>pausa la máquina para no gastar batería; al volver sigue donde iba</dd>
+			</dl>
+		</section>
+
+		<section>
+			<h2 class="lab-help__heading">créditos</h2>
+			<p>Esto existe gracias al software libre y a la gente que lo hace:</p>
+			<ul class="lab-help__credits">
+				{
+					CREDITS.map((c) => (
+						<li>
+							<p class="lab-help__credit-name">
+								<a class="text-link" href={c.href} rel="noopener">
+									{c.name}
+								</a>
+								<span class="lab-help__license">{c.license}</span>
+							</p>
+							<p class="lab-help__credit-what">{c.what}</p>
+						</li>
+					))
+				}
+			</ul>
+			<p class="lab-help__note">
+				v86 a su vez incluye o se apoya en{' '}
+				{
+					INSIDE_V86.map((p, i) => (
+						<>
+							<a class="text-link" href={p.href} rel="noopener">
+								{p.name}
+							</a>
+							{i < INSIDE_V86.length - 2 ? ', ' : i === INSIDE_V86.length - 2 ? ' y ' : '.'}
+						</>
+					))
+				}
+				Si te gustó, la demo original con Windows 98, FreeDOS y muchos más sistemas está en{' '}
+				<a class="text-link" href="https://copy.sh/v86/" rel="noopener">copy.sh/v86</a>.
+			</p>
+		</section>
+	</div>
+</dialog>
+
+<script>
+	const dialog = document.querySelector<HTMLDialogElement>('[data-lab-help]');
+
+	if (dialog) {
+		document.querySelectorAll('[data-lab-help-open]').forEach((button) =>
+			button.addEventListener('click', () => dialog.showModal()),
+		);
+		dialog.querySelector('[data-lab-help-close]')?.addEventListener('click', () => dialog.close());
+
+		// Clic en el fondo (fuera de la caja) también cierra.
+		dialog.addEventListener('click', (event) => {
+			if (event.target !== dialog) return;
+			const box = dialog.getBoundingClientRect();
+			const { clientX: x, clientY: y } = event;
+			if (x < box.left || x > box.right || y < box.top || y > box.bottom) dialog.close();
+		});
+	}
+</script>
