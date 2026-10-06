@@ -1,0 +1,123 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import StarChart from '../components/StarChart.astro';
+import MoonPhase from '../components/MoonPhase.astro';
+import Newsletter from '../components/Newsletter.astro';
+import PostCard from '../components/PostCard.astro';
+import PostRow from '../components/PostRow.astro';
+import Icon from '../components/Icon.astro';
+import { AUTHOR, CATEGORIES, SITE_DESCRIPTION, SITE_TAGLINE, SITE_TITLE } from '../consts';
+import { byCategory, categoryUrl, getPosts, pickFeatured } from '../lib/posts';
+
+const posts = await getPosts();
+const featured = pickFeatured(posts);
+const rest = posts.filter((p) => p.id !== featured?.id);
+const topics = CATEGORIES.map((c) => ({ ...c, count: byCategory(posts, c.slug).length }));
+---
+
+<BaseLayout title={`${SITE_TITLE} · ${SITE_TAGLINE}`} description={SITE_DESCRIPTION}>
+	<PageHero home command="whoami">
+		<p class="hero-name">{AUTHOR.name.toLowerCase()} <span>· {AUTHOR.role.toLowerCase()}</span></p>
+		<h1 class="page-hero__title">
+			Escribo sobre el software que construyo y, cuando hay cielo despejado, sobre lo que veo
+			arriba.
+		</h1>
+		<p class="page-hero__text">
+			Esto es mi bitácora. Backend, bases de datos, la nube y lo que voy probando con
+			inteligencia artificial, explicado como me hubiera gustado que me lo explicaran a mí. Hay
+			código, hay opiniones y de vez en cuando se cuela una constelación.
+		</p>
+		<div class="cluster hero-actions">
+			<a class="button button--primary" href="/blog">leer el blog</a>
+			<a class="button" href="/portafolio">ver portafolio</a>
+		</div>
+
+		<StarChart slot="art" />
+	</PageHero>
+
+	<div class="container">
+		<div class="shell section">
+			<div>
+				{
+					featured && (
+						<section aria-labelledby="destacado">
+							<div class="section-title">
+								<h2 id="destacado">última entrada</h2>
+							</div>
+							<PostCard post={featured} featured />
+						</section>
+					)
+				}
+
+				<section class="section" aria-labelledby="archivo">
+					<div class="section-title">
+						<h2 id="archivo">ls -lt blog/</h2>
+						<span class="section-title__meta">{posts.length} archivos</span>
+					</div>
+
+					{
+						rest.length > 0 ? (
+							<div class="ls">
+								{rest.map((post) => (
+									<PostRow post={post} />
+								))}
+							</div>
+						) : (
+							<div class="empty">
+								<span class="empty__icon">
+									<Icon name="file-text" />
+								</span>
+								<p>Todavía no hay más entradas.</p>
+							</div>
+						)
+					}
+
+					<div class="section-more">
+						<a class="button" href="/blog">ver todo el archivo →</a>
+					</div>
+				</section>
+			</div>
+
+			<aside class="rail" aria-label="Contenido relacionado">
+				<div class="card card--pad">
+					<span class="eyebrow">sobre mí</span>
+					<div class="author">
+						<span class="avatar" aria-hidden="true">{AUTHOR.initials}</span>
+						<div>
+							<div class="author__name">{AUTHOR.name}</div>
+							<div class="author__role">{AUTHOR.role}</div>
+						</div>
+					</div>
+					<p class="card__text">{AUTHOR.bio}</p>
+					<a class="text-link" href="/portafolio">portafolio y proyectos →</a>
+				</div>
+
+				<div class="card card--pad">
+					<span class="eyebrow">temas</span>
+					<ul class="tree">
+						{
+							topics.map((t) => (
+								<li>
+									<a href={categoryUrl(t.slug)}>
+										<span>{t.slug}/</span>
+										<span class="tree__count">{t.count}</span>
+									</a>
+								</li>
+							))
+						}
+					</ul>
+				</div>
+
+				<div class="card card--pad">
+					<span class="eyebrow">la luna, el día del build</span>
+					<MoonPhase />
+				</div>
+			</aside>
+		</div>
+
+		<div class="section section--last">
+			<Newsletter />
+		</div>
+	</div>
+</BaseLayout>

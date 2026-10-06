@@ -1,0 +1,63 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import CategoryFilters from '../../components/CategoryFilters.astro';
+import PostCard from '../../components/PostCard.astro';
+import Icon from '../../components/Icon.astro';
+import { CATEGORIES, SITE_TITLE } from '../../consts';
+import { byCategory, getPosts } from '../../lib/posts';
+
+export const getStaticPaths = (async () => {
+	const all = await getPosts();
+	const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, byCategory(all, c.slug).length]));
+	return CATEGORIES.map((category) => ({
+		params: { categoria: category.slug },
+		props: { category, posts: byCategory(all, category.slug), counts, total: all.length },
+	}));
+}) satisfies GetStaticPaths;
+
+const { category, posts, counts, total } = Astro.props;
+---
+
+<BaseLayout
+	title={`${category.name} · ${SITE_TITLE}`}
+	description={`Entradas sobre ${category.name.toLowerCase()} en el blog de John Alejandro.`}
+>
+	<PageHero command="ls -lt" path={`blog/${category.slug}`}>
+		<h1 class="page-hero__title">{category.name}</h1>
+		<p class="page-hero__text">
+			{posts.length}
+			{posts.length === 1 ? ' entrada' : ' entradas'} en este tema.
+		</p>
+	</PageHero>
+
+	<div class="container">
+		<section class="section--tight" aria-label="Temas">
+			<CategoryFilters active={category.slug} counts={counts} total={total} allHref="/blog" />
+		</section>
+
+		<section class="section--tight section--last">
+			{
+				posts.length > 0 ? (
+					<div class="grid-cards">
+						{posts.map((post) => (
+							<PostCard post={post} />
+						))}
+					</div>
+				) : (
+					<div class="empty">
+						<span class="empty__icon">
+							<Icon name="search-x" />
+						</span>
+						<p class="empty__title">Aún no hay entradas de {category.name.toLowerCase()}</p>
+						<p class="empty__text">Están en el backlog. Mientras tanto, mira el resto del blog.</p>
+						<a class="button" href="/blog">
+							ver todo el blog
+						</a>
+					</div>
+				)
+			}
+		</section>
+	</div>
+</BaseLayout>

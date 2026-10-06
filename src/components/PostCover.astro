@@ -1,0 +1,47 @@
+---
+// Portada generada: una carta celeste con una constelación inventada a partir
+// del slug del artículo. Ver `lib/constellation.ts`.
+import { constellation } from '../lib/constellation';
+
+interface Props {
+	slug: string;
+	label: string;
+	/** `wide` para la cabecera del artículo y la tarjeta destacada. */
+	wide?: boolean;
+}
+
+const { slug, label, wide = false } = Astro.props;
+const W = wide ? 800 : 400;
+const H = wide ? 360 : 250;
+const c = constellation(slug);
+
+const px = (v: number) => (v * W).toFixed(1);
+const py = (v: number) => (v * H).toFixed(1);
+const gridX = Array.from({ length: Math.floor(W / 50) - 1 }, (_, i) => (i + 1) * 50);
+const gridY = Array.from({ length: Math.floor(H / 50) }, (_, i) => (i + 1) * 50 - 25);
+---
+
+<svg class="cover" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+	<rect class="cover__bg" width={W} height={H}></rect>
+	<g class="cover__grid">
+		{gridX.map((gx) => <line x1={gx} x2={gx} y1="0" y2={H} />)}
+		{gridY.map((gy) => <line x1="0" x2={W} y1={gy} y2={gy} />)}
+	</g>
+	<g class="cover__field">
+		{c.field.map((s) => <circle cx={px(s.x)} cy={py(s.y)} r={s.r} />)}
+	</g>
+	<g class="cover__lines">
+		{
+			c.lines.map(([a, b]) => (
+				<line x1={px(c.stars[a].x)} y1={py(c.stars[a].y)} x2={px(c.stars[b].x)} y2={py(c.stars[b].y)} />
+			))
+		}
+	</g>
+	<g class="cover__stars">
+		{c.stars.map((s) => <circle cx={px(s.x)} cy={py(s.y)} r={s.r * (wide ? 1.4 : 1)} />)}
+	</g>
+	<text class="cover__label" x="16" y="26">{label.toUpperCase()}</text>
+	<text class="cover__coords" x={W - 16} y={H - 16} text-anchor="end">
+		RA {c.ra} · Dec {c.dec}
+	</text>
+</svg>

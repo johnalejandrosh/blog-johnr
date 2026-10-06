@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <title>Primeros pasos — Nombre del Blog</title>
+    <meta name="description" content="Todos los artículos de la categoría Primeros pasos." />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Evita el parpadeo de tema: se aplica antes de pintar. -->
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('ds-theme');
+          if (m === 'light' || m === 'dark') document.documentElement.setAttribute('data-ds-theme', m);
+        } catch (e) {}
+      })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    />
+
+    <script type="module" src="/src/main.js"></script>
+  </head>
+
+  <body>
+    <a class="ds-skip-link" href="#main">Saltar al contenido</a>
+
+    <header class="site-header">
+      <div class="ds-container site-header__inner">
+        <a class="brand" href="index.html"><span class="brand__mark">B</span> Nombre del Blog</a>
+
+        <nav class="site-nav" aria-label="Principal">
+          <a class="site-nav__link" href="index.html">Artículos</a>
+          <a class="site-nav__link" href="categoria.html" aria-current="page">Categorías</a>
+          <a class="site-nav__link" href="#newsletter">Sobre</a>
+        </nav>
+
+        <span class="ds-spacer"></span>
+
+        <div class="ds-button-group" role="group" aria-label="Tema" data-ds-theme-switch>
+          <button class="ds-button ds-button--secondary ds-button--sm" data-theme="light">Claro</button>
+          <button class="ds-button ds-button--secondary ds-button--sm" data-theme="dark">Oscuro</button>
+          <button class="ds-button ds-button--secondary ds-button--sm" data-theme="system">Auto</button>
+        </div>
+
+        <a class="ds-button ds-button--primary ds-button--sm" href="#newsletter">Suscribirme</a>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <section class="page-hero">
+        <div class="ds-container">
+          <nav class="ds-text-sm ds-text-subtle ds-mb-4" aria-label="Migas de pan">
+            <a href="index.html">Inicio</a> <span aria-hidden="true">/</span> <span>Primeros pasos</span>
+          </nav>
+          <h1 class="page-hero__title">Primeros pasos</h1>
+          <p class="ds-text-lg ds-text-muted ds-measure ds-mt-4">
+            Todo lo que hay que saber para arrancar. Descripción corta de la
+            categoría, para que se entienda antes de empezar a leer.
+          </p>
+          <div class="ds-cluster ds-cluster--gap-2 ds-mt-5">
+            <span class="ds-badge ds-badge--pill">9 artículos</span>
+            <span class="ds-badge ds-badge--pill">Actualizado en septiembre</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="ds-container">
+        <section class="ds-mt-8" aria-label="Filtrar por categoría">
+          <div class="filters">
+            <a class="filter" href="index.html">Todos</a>
+            <a class="filter" href="categoria.html" aria-current="page">Primeros pasos</a>
+            <a class="filter" href="categoria.html">Rutinas</a>
+            <a class="filter" href="categoria.html">Material</a>
+            <a class="filter" href="categoria.html">Guías</a>
+          </div>
+        </section>
+
+        <div class="ds-grid ds-grid--auto ds-grid--gap-5 ds-mt-8" style="--ds-grid-min: 17rem">
+          <a class="ds-card ds-card--interactive ds-card--flush post-card" href="articulo.html">
+            <div class="post-card__cover cover--empty" data-label="16:10"></div>
+            <div class="post-card__body">
+              <span class="ds-badge ds-badge--pill ds-badge--sm ds-w-fit">Primeros pasos</span>
+              <h2 class="post-card__title">La guía completa para empezar</h2>
+              <p class="post-card__excerpt">Todo lo básico en una sola lectura, en el orden correcto.</p>
+              <div class="post-card__meta"><time datetime="2026-09-17">17 sep</time><span aria-hidden="true">·</span><span>8 min</span></div>
+            </div>
+          </a>
+          <a class="ds-card ds-card--interactive ds-card--flush post-card" href="articulo.html">
+            <div class="post-card__cover cover--empty" data-label="16:10"></div>
+            <div class="post-card__body">
+              <span class="ds-badge ds-badge--pill ds-badge--sm ds-w-fit">Primeros pasos</span>
+              <h2 class="post-card__title">Tres errores que cometí al principio</h2>
+              <p class="post-card__excerpt">Y cómo evitarlos sin complicarse la primera semana.</p>
+              <div class="post-card__meta"><time datetime="2026-09-12">12 sep</time><span aria-hidden="true">·</span><span>5 min</span></div>
+            </div>
+          </a>
+          <a class="ds-card ds-card--interactive ds-card--flush post-card" href="articulo.html">
+            <div class="post-card__cover cover--empty" data-label="16:10"></div>
+            <div class="post-card__body">
+              <span class="ds-badge ds-badge--pill ds-badge--sm ds-w-fit">Primeros pasos</span>
+              <h2 class="post-card__title">Un caso real, explicado paso a paso</h2>
+              <p class="post-card__excerpt">De la primera sesión al primer mes, con los números reales.</p>
+              <div class="post-card__meta"><time datetime="2026-08-15">15 ago</time><span aria-hidden="true">·</span><span>7 min</span></div>
+            </div>
+          </a>
+        </div>
+
+        <!-- ============ PAGINACIÓN ============ -->
+        <nav class="ds-cluster ds-cluster--gap-2 ds-mt-10 ds-justify-center" aria-label="Paginación">
+          <a class="ds-button ds-button--secondary ds-button--sm" href="#" aria-disabled="true">Anterior</a>
+          <a class="ds-button ds-button--primary ds-button--sm ds-button--icon" href="#" aria-current="page" aria-label="Página 1">1</a>
+          <a class="ds-button ds-button--ghost ds-button--sm ds-button--icon" href="#" aria-label="Página 2">2</a>
+          <a class="ds-button ds-button--ghost ds-button--sm ds-button--icon" href="#" aria-label="Página 3">3</a>
+          <a class="ds-button ds-button--secondary ds-button--sm" href="#">Siguiente</a>
+        </nav>
+
+        <section class="ds-mt-12" id="newsletter">
+          <div class="newsletter">
+            <h2 class="newsletter__title">Un email por semana, nada más</h2>
+            <p class="newsletter__text">Lo nuevo del blog, resumido. Se cancela en un clic.</p>
+            <form class="newsletter__form" data-ds-newsletter novalidate>
+              <label class="ds-visually-hidden" for="email-cat">Correo electrónico</label>
+              <input class="newsletter__input" id="email-cat" type="email" name="email"
+                     placeholder="tu@correo.com" autocomplete="email" required />
+              <button class="ds-button ds-button--primary newsletter__button" type="submit">Suscribirme</button>
+            </form>
+            <p class="newsletter__status" data-newsletter-status role="status" aria-live="polite"></p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="ds-container site-footer__inner">
+        <a class="brand" href="index.html"><span class="brand__mark">B</span> Nombre del Blog</a>
+        <nav class="footer-links" aria-label="Pie">
+          <a href="categoria.html">Archivo</a>
+          <a href="#newsletter">Newsletter</a>
+          <a href="feed.xml">RSS</a>
+          <a href="#">Contacto</a>
+          <a href="#">Privacidad</a>
+        </nav>
+        <span class="ds-text-xs ds-text-subtle">© 2026 · Plantilla MVP</span>
+      </div>
+    </footer>
+  </body>
+</html>

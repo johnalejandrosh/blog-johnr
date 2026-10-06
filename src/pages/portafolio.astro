@@ -1,0 +1,163 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import { AUTHOR, SITE_TITLE, SKILLS, SKILL_NAMES, type SkillSlug } from '../consts';
+import { getProjects } from '../lib/posts';
+
+const projects = await getProjects();
+const skills = SKILLS.map((s) => ({
+	...s,
+	count: projects.filter((p) => p.data.skills.includes(s.slug)).length,
+}));
+const hasMocks = projects.some((p) => p.data.status === 'ejemplo');
+
+const STATUS = {
+	ejemplo: 'maqueta',
+	'en-curso': 'en curso',
+	terminado: 'terminado',
+} as const;
+---
+
+<BaseLayout
+	title={`Portafolio · ${SITE_TITLE}`}
+	description="Quién soy, con qué trabajo y en qué proyectos he metido las manos: backend, bases de datos, cloud e IA."
+>
+	<PageHero command="cat sobre-mi.md" path="portafolio">
+		<h1 class="page-hero__title">Hola, soy {AUTHOR.name.split(' ')[0]}.</h1>
+		<!-- TODO: biografía definitiva. Este texto es un borrador. -->
+		<div class="page-hero__text bio">
+			<p>
+				Soy desarrollador de software. Paso la mayor parte del tiempo del lado del backend: APIs,
+				modelos de datos, colas, despliegues y esa parte del trabajo que nadie ve hasta que se cae.
+			</p>
+			<p>
+				Me gusta entender cómo funcionan las cosas por debajo antes de usarlas, y este blog es en
+				buena parte eso: mis notas en limpio. Fuera del teclado, miro el cielo. Algún día voy a
+				escribir más sobre eso.
+			</p>
+		</div>
+		<div class="cluster hero-actions">
+			<a class="button button--primary" href="#proyectos">ver proyectos</a>
+			<a class="button" href="/blog">leer el blog</a>
+		</div>
+	</PageHero>
+
+	<div class="container">
+		<section class="section" id="proyectos" aria-labelledby="proyectos-titulo">
+			<div class="section-title">
+				<h2 id="proyectos-titulo">proyectos</h2>
+				<span class="section-title__meta" data-project-count>{projects.length} proyectos</span>
+			</div>
+
+			{
+				hasMocks && (
+					<p class="notice">
+						<strong>en construcción.</strong> Esta sección es una maqueta: los proyectos de abajo son
+						de ejemplo y los voy a reemplazar por los reales.
+					</p>
+				)
+			}
+
+			<div class="skills-bar">
+				<button class="button button--primary" type="button" data-skill-all>
+					ver todos los proyectos
+				</button>
+				<span class="skills-bar__label" id="skills-label">o filtra por habilidad:</span>
+				<div class="skills" role="group" aria-labelledby="skills-label">
+					{
+						skills.map((s) => (
+							<button class="skill" type="button" data-skill={s.slug} aria-pressed="false">
+								{s.name}
+								<span class="skill__count">{s.count}</span>
+							</button>
+						))
+					}
+				</div>
+			</div>
+
+			<div class="grid-cards projects" data-projects>
+				{
+					projects.map((project) => (
+						<article class="card project" data-skills={project.data.skills.join(' ')}>
+							<header class="project__head">
+								<span class="project__year">{project.data.year}</span>
+								<span class={`project__status project__status--${project.data.status}`}>
+									{STATUS[project.data.status]}
+								</span>
+							</header>
+							<h3 class="project__title">{project.data.title}</h3>
+							<p class="project__summary">{project.data.summary}</p>
+							{project.data.stack.length > 0 && (
+								<p class="project__stack">
+									<span aria-hidden="true">stack:</span> {project.data.stack.join(' · ')}
+								</p>
+							)}
+							<ul class="project__skills" aria-label="Habilidades">
+								{project.data.skills.map((slug) => (
+									<li>#{SKILL_NAMES[slug as SkillSlug]}</li>
+								))}
+							</ul>
+							{(project.data.repo || project.data.demo) && (
+								<div class="project__links">
+									{project.data.repo && <a class="text-link" href={project.data.repo}>código →</a>}
+									{project.data.demo && <a class="text-link" href={project.data.demo}>demo →</a>}
+								</div>
+							)}
+						</article>
+					))
+				}
+			</div>
+
+			<div class="empty" data-projects-empty hidden>
+				<span class="empty__icon"><Icon name="search-x" /></span>
+				<p class="empty__title">Nada con esa habilidad todavía</p>
+				<button class="button" type="button" data-skill-all>ver todos los proyectos</button>
+			</div>
+		</section>
+	</div>
+</BaseLayout>
+
+<script>
+	// Filtro por habilidad. El estado vive en `?habilidad=` para que un enlace a
+	// /portafolio?habilidad=nestjs abra ya filtrado.
+	const PARAM = 'habilidad';
+	const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-skill]')];
+	const allButtons = document.querySelectorAll<HTMLButtonElement>('[data-skill-all]');
+	const cards = [...document.querySelectorAll<HTMLElement>('[data-projects] > [data-skills]')];
+	const empty = document.querySelector<HTMLElement>('[data-projects-empty]');
+	const counter = document.querySelector<HTMLElement>('[data-project-count]');
+	const known = new Set(buttons.map((b) => b.dataset.skill));
+
+	const apply = (skill: string | null, push = true) => {
+		let shown = 0;
+		cards.forEach((card) => {
+			const match = !skill || card.dataset.skills!.split(' ').includes(skill);
+			card.hidden = !match;
+			if (match) shown++;
+		});
+		buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.skill === skill)));
+		allButtons.forEach((b) => b.classList.toggle('is-active', !skill));
+		if (empty) empty.hidden = shown > 0;
+		if (counter) counter.textContent = `${shown} ${shown === 1 ? 'proyecto' : 'proyectos'}`;
+
+		if (push) {
+			const url = new URL(window.location.href);
+			if (skill) url.searchParams.set(PARAM, skill);
+			else url.searchParams.delete(PARAM);
+			history.replaceState(null, '', url);
+		}
+	};
+
+	buttons.forEach((button) =>
+		button.addEventListener('click', () => {
+			const skill = button.dataset.skill!;
+			// Un segundo clic sobre el filtro activo lo quita.
+			apply(button.getAttribute('aria-pressed') === 'true' ? null : skill);
+		}),
+	);
+	allButtons.forEach((b) => b.addEventListener('click', () => apply(null)));
+
+	const initial = new URLSearchParams(window.location.search).get(PARAM);
+	apply(initial && known.has(initial) ? initial : null, false);
+</script>

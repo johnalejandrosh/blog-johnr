@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="johnr.log">
+  <rect width="32" height="32" rx="7" fill="#161513"/>
+  <!-- Prompt: el chevron y el cursor -->
+  <path d="M7 10.5l6 5.5-6 5.5" fill="none" stroke="#E8975A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="15.5" y="20" width="9" height="2.6" rx="1.2" fill="#E9E4D8"/>
+  <!-- Una estrella de cuatro puntas arriba a la derecha -->
+  <path d="M24 5.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" fill="#E9E4D8"/>
+</svg>

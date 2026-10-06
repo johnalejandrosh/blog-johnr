@@ -1,0 +1,57 @@
+---
+// Iconos de `lucide` (24×24, strokeWidth 2), copiados como paths para no
+// arrastrar una dependencia. Decorativos: siempre `aria-hidden`.
+const PATHS = {
+	'file-text': [
+		'M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z',
+		'M14 2v5h5',
+		'M8 13h8',
+		'M8 17h8',
+	],
+	'search-x': ['m13.5 8.5-5 5', 'm8.5 8.5 5 5', 'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16', 'm21 21-4.3-4.3'],
+	compass: [
+		'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20',
+		'm16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12',
+	],
+	// El círculo del sol va como path para que todos los iconos sean la misma
+	// lista de `d`, sin mezclar <circle> en el bucle.
+	sun: [
+		'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8',
+		'M12 2v2',
+		'M12 20v2',
+		'm4.93 4.93 1.41 1.41',
+		'm17.66 17.66 1.41 1.41',
+		'M2 12h2',
+		'M20 12h2',
+		'm6.34 17.66-1.41 1.41',
+		'm19.07 4.93-1.41 1.41',
+	],
+	moon: ['M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z'],
+} as const;
+
+interface Props {
+	name: keyof typeof PATHS;
+	size?: number;
+	class?: string;
+	/** Marca el icono para poder mostrarlo u ocultarlo desde CSS. */
+	'data-icon'?: string;
+}
+
+const { name, size = 24, class: className, 'data-icon': dataIcon } = Astro.props;
+---
+
+<svg
+	class={className}
+	data-icon={dataIcon}
+	width={size}
+	height={size}
+	viewBox="0 0 24 24"
+	fill="none"
+	stroke="currentColor"
+	stroke-width="2"
+	stroke-linecap="round"
+	stroke-linejoin="round"
+	aria-hidden="true"
+>
+	{PATHS[name].map((d) => <path d={d} />)}
+</svg>

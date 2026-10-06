@@ -1,0 +1,114 @@
+---
+// Carta celeste de Orión con coordenadas reales (J2000). Ascensión recta
+// crece hacia la izquierda, como en cualquier carta mirando al sur.
+
+type Star = { name: string; ra: number; dec: number; mag: number; label?: boolean };
+
+// RA y Dec en grados.
+const STARS: Record<string, Star> = {
+	betelgeuse: { name: 'Betelgeuse · α Ori', ra: 88.793, dec: 7.407, mag: 0.5, label: true },
+	rigel: { name: 'Rigel · β Ori', ra: 78.634, dec: -8.202, mag: 0.13, label: true },
+	bellatrix: { name: 'Bellatrix · γ Ori', ra: 81.283, dec: 6.35, mag: 1.64 },
+	mintaka: { name: 'Mintaka · δ Ori', ra: 83.002, dec: -0.299, mag: 2.23 },
+	alnilam: { name: 'Alnilam · ε Ori', ra: 84.053, dec: -1.202, mag: 1.69 },
+	alnitak: { name: 'Alnitak · ζ Ori', ra: 85.19, dec: -1.943, mag: 1.77 },
+	saiph: { name: 'Saiph · κ Ori', ra: 86.939, dec: -9.67, mag: 2.09 },
+	meissa: { name: 'Meissa · λ Ori', ra: 83.784, dec: 9.934, mag: 3.33 },
+};
+
+const LINES: [string, string][] = [
+	['meissa', 'betelgeuse'],
+	['meissa', 'bellatrix'],
+	['betelgeuse', 'bellatrix'],
+	['betelgeuse', 'alnitak'],
+	['bellatrix', 'mintaka'],
+	['mintaka', 'alnilam'],
+	['alnilam', 'alnitak'],
+	['alnitak', 'saiph'],
+	['mintaka', 'rigel'],
+];
+
+const M42 = { ra: 83.82, dec: -5.391 };
+
+// Ventana: RA 75°–93° (5h00m–6h12m), Dec −13°…+13°.
+const RA_MAX = 93;
+const DEC_MAX = 13;
+const SCALE = 14;
+const PAD = 26;
+const W = 18 * SCALE + PAD * 2;
+const H = 26 * SCALE + PAD * 2;
+
+const x = (ra: number) => PAD + (RA_MAX - ra) * SCALE;
+const y = (dec: number) => PAD + (DEC_MAX - dec) * SCALE;
+const radius = (mag: number) => 1.6 + (3.6 - mag) * 1.15;
+
+const raGrid = [
+	{ deg: 90, label: '6h' },
+	{ deg: 85, label: '5h40m' },
+	{ deg: 80, label: '5h20m' },
+];
+const decGrid = [10, 5, 0, -5, -10];
+---
+
+<figure class="starchart">
+	<svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby="starchart-title">
+		<title id="starchart-title">Carta celeste de la constelación de Orión</title>
+
+		<g class="starchart__grid">
+			<rect x={PAD} y={PAD} width={W - PAD * 2} height={H - PAD * 2} />
+			{raGrid.map((g) => <line x1={x(g.deg)} x2={x(g.deg)} y1={PAD} y2={H - PAD} />)}
+			{decGrid.map((d) => <line x1={PAD} x2={W - PAD} y1={y(d)} y2={y(d)} />)}
+		</g>
+
+		<g class="starchart__ticks">
+			{
+				raGrid.map((g) => (
+					<text x={x(g.deg)} y={H - PAD + 14} text-anchor="middle">
+						{g.label}
+					</text>
+				))
+			}
+			{
+				decGrid.map((d) => (
+					<text x={PAD - 6} y={y(d) + 3} text-anchor="end">
+						{d > 0 ? `+${d}` : d === 0 ? '0' : `−${-d}`}°
+					</text>
+				))
+			}
+		</g>
+
+		<g class="starchart__lines">
+			{
+				LINES.map(([a, b]) => (
+					<line x1={x(STARS[a].ra)} y1={y(STARS[a].dec)} x2={x(STARS[b].ra)} y2={y(STARS[b].dec)} />
+				))
+			}
+		</g>
+
+		<g class="starchart__nebula">
+			<ellipse cx={x(M42.ra)} cy={y(M42.dec)} rx="7" ry="5" />
+			<text x={x(M42.ra) + 11} y={y(M42.dec) + 3}>M42</text>
+		</g>
+
+		<g class="starchart__stars">
+			{
+				Object.entries(STARS).map(([key, s]) => (
+					<g class:list={['starchart__star', { 'starchart__star--red': key === 'betelgeuse' }]}>
+						<title>{`${s.name} · magnitud ${s.mag}`}</title>
+						<circle cx={x(s.ra)} cy={y(s.dec)} r={radius(s.mag) + 5} class="starchart__halo" />
+						<circle cx={x(s.ra)} cy={y(s.dec)} r={radius(s.mag)} />
+						{s.label && (
+							<text x={x(s.ra) + radius(s.mag) + 6} y={y(s.dec) + 3}>
+								{s.name.split(' · ')[0]}
+							</text>
+						)}
+					</g>
+				))
+			}
+		</g>
+	</svg>
+	<figcaption>
+		<span>fig. 1</span> Orión, coordenadas J2000. Desde Colombia se ve alto en el cielo de diciembre
+		a marzo, apenas oscurece.
+	</figcaption>
+</figure>

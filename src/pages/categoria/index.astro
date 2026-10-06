@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import { CATEGORIES, SITE_TITLE } from '../../consts';
+import { byCategory, categoryUrl, getPosts } from '../../lib/posts';
+
+const posts = await getPosts();
+const categories = CATEGORIES.map((category) => ({
+	...category,
+	posts: byCategory(posts, category.slug),
+}));
+---
+
+<BaseLayout
+	title={`Temas · ${SITE_TITLE}`}
+	description="Los temas del blog: bases de datos, backend, arquitectura, cloud, inteligencia artificial y astronomía."
+>
+	<PageHero command="tree -d -L 1" path="blog">
+		<h1 class="page-hero__title">Temas</h1>
+		<p class="page-hero__text">
+			Seis carpetas. Si estás empezando, ve en orden: primero bases de datos, luego backend, y
+			la nube al final, cuando ya tengas algo que desplegar.
+		</p>
+	</PageHero>
+
+	<div class="container">
+		<section class="section--tight section--last">
+			<div class="grid-cards">
+				{
+					categories.map((category) => (
+						<a class="card card--pad topic-card" href={categoryUrl(category.slug)}>
+							<span class="topic-card__path">blog/{category.slug}/</span>
+							<h2 class="topic-card__title">{category.name}</h2>
+							<p class="topic-card__count">
+								{category.posts.length}
+								{category.posts.length === 1 ? ' entrada' : ' entradas'}
+							</p>
+							{category.posts.length > 0 && (
+								<ul class="topic-card__list">
+									{category.posts.slice(0, 3).map((p) => (
+										<li>{p.data.title}</li>
+									))}
+								</ul>
+							)}
+						</a>
+					))
+				}
+			</div>
+		</section>
+	</div>
+</BaseLayout>

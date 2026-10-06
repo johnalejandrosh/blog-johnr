@@ -1,0 +1,36 @@
+---
+import { CATEGORIES } from '../consts';
+import { categoryUrl } from '../lib/posts';
+
+interface Props {
+	/** Slug activo, o `null` para "todos". */
+	active?: string | null;
+	/** Artículos por categoría, para mostrar el conteo junto a cada filtro. */
+	counts?: Record<string, number>;
+	/** Total para el filtro "todos". */
+	total?: number;
+	/** Enlace del botón "todos". */
+	allHref?: string;
+}
+
+const { active = null, counts, total, allHref = '/blog' } = Astro.props;
+---
+
+<nav class="filters" aria-label="Filtrar por tema">
+	<a class="filter" href={allHref} aria-current={active === null ? 'page' : undefined}>
+		todos{total !== undefined && <span class="filter__count">{total}</span>}
+	</a>
+	{
+		CATEGORIES.map((category) => (
+			<a
+				class="filter"
+				href={categoryUrl(category.slug)}
+				aria-current={active === category.slug ? 'page' : undefined}
+				title={category.name}
+			>
+				#{category.slug}
+				{counts && <span class="filter__count">{counts[category.slug] ?? 0}</span>}
+			</a>
+		))
+	}
+</nav>

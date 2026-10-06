@@ -1,0 +1,29 @@
+---
+interface Props {
+	/** Comando que se muestra en la línea de prompt, sin el `$`. */
+	command?: string;
+	/** Directorio del prompt, relativo a `~`. */
+	path?: string;
+	/** Cabecera grande de portada, con columna para el slot `art`. */
+	home?: boolean;
+}
+
+const { command, path = '', home = false } = Astro.props;
+---
+
+<section class:list={['page-hero', { 'page-hero--home': home }]}>
+	<div class="container page-hero__grid">
+		<div class="page-hero__copy">
+			{
+				command && (
+					<p class="prompt" aria-hidden="true">
+						<span class="prompt__path">~{path && `/${path}`}</span>
+						<span class="prompt__sign">$</span> {command}
+					</p>
+				)
+			}
+			<slot />
+		</div>
+		{Astro.slots.has('art') && <div class="page-hero__art"><slot name="art" /></div>}
+	</div>
+</section>

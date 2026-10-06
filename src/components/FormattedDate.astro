@@ -1,0 +1,19 @@
+---
+interface Props {
+	date: Date;
+	/** `short` -> 12 sep · `long` -> 12 de septiembre de 2026 */
+	format?: 'short' | 'long';
+}
+
+const { date, format = 'short' } = Astro.props;
+
+// `pubDate: '2026-08-20'` se interpreta como medianoche UTC. Sin fijar la zona
+// aquí, en cualquier huso al oeste de Greenwich (el nuestro, UTC-5) la fecha se
+// muestra un día antes de la que está escrita en el artículo.
+const options: Intl.DateTimeFormatOptions =
+	format === 'long'
+		? { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }
+		: { month: 'short', day: 'numeric', timeZone: 'UTC' };
+---
+
+<time datetime={date.toISOString()}>{date.toLocaleDateString('es-CO', options)}</time>

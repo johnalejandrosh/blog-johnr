@@ -1,0 +1,49 @@
+---
+import { Image } from 'astro:assets';
+import PostCover from './PostCover.astro';
+import { categoryName, isoDate, postUrl, readingTime, type Post } from '../lib/posts';
+
+interface Props {
+	post: Post;
+	/** Tarjeta horizontal grande para la portada. */
+	featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+const { title, description, pubDate, heroImage, heroImageAlt, category } = post.data;
+const minutes = readingTime(post.body);
+---
+
+<a class:list={['card post-card', { 'post-card--featured': featured }]} href={postUrl(post)}>
+	<div class="post-card__cover">
+		{
+			heroImage ? (
+				<Image
+					src={heroImage}
+					alt={heroImageAlt ?? ''}
+					width={featured ? 960 : 720}
+					height={featured ? 540 : 450}
+					loading={featured ? 'eager' : 'lazy'}
+				/>
+			) : (
+				<PostCover slug={post.id} label={categoryName(category)} wide={featured} />
+			)
+		}
+	</div>
+
+	<div class="post-card__body">
+		<div class="post-meta">
+			<time datetime={pubDate.toISOString()}>{isoDate(pubDate)}</time>
+			<span aria-hidden="true">·</span>
+			<span class="post-meta__cat">{category}/</span>
+			<span aria-hidden="true">·</span>
+			<span>{minutes} min</span>
+		</div>
+
+		{featured ? <h2 class="post-card__title">{title}</h2> : <h3 class="post-card__title">{title}</h3>}
+
+		<p class="post-card__excerpt">{description}</p>
+
+		{featured && <span class="post-card__more">leer entrada →</span>}
+	</div>
+</a>

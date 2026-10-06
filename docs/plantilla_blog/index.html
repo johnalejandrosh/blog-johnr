@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <title>Nombre del Blog — Artículos, sin relleno</title>
+    <meta name="description" content="Una lectura larga cada semana y tres notas cortas." />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Evita el parpadeo de tema: se aplica antes de pintar. -->
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('ds-theme');
+          if (m === 'light' || m === 'dark') document.documentElement.setAttribute('data-ds-theme', m);
+        } catch (e) {}
+      })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    />
+
+    <script type="module" src="/src/main.js"></script>
+  </head>
+
+  <body>
+    <a class="ds-skip-link" href="#main">Saltar al contenido</a>
+
+    <header class="site-header">
+      <div class="ds-container site-header__inner">
+        <a class="brand" href="index.html"><span class="brand__mark">B</span> Nombre del Blog</a>
+
+        <nav class="site-nav" aria-label="Principal">
+          <a class="site-nav__link" href="index.html" aria-current="page">Artículos</a>
+          <a class="site-nav__link" href="categoria.html">Categorías</a>
+          <a class="site-nav__link" href="#newsletter">Sobre</a>
+        </nav>
+
+        <span class="ds-spacer"></span>
+
+        <div class="ds-button-group" role="group" aria-label="Tema" data-ds-theme-switch>
+          <button class="ds-button ds-button--secondary ds-button--sm" data-theme="light">Claro</button>
+          <button class="ds-button ds-button--secondary ds-button--sm" data-theme="dark">Oscuro</button>
+          <button class="ds-button ds-button--secondary ds-button--sm" data-theme="system">Auto</button>
+        </div>
+
+        <a class="ds-button ds-button--primary ds-button--sm" href="#newsletter">Suscribirme</a>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <!-- ============ CABECERA DE LISTADO ============ -->
+      <section class="page-hero">
+        <div class="ds-container">
+          <span class="ds-eyebrow">Número 12 · Septiembre 2026</span>
+          <h1 class="page-hero__title ds-mt-4">Artículos, sin relleno</h1>
+          <p class="ds-text-lg ds-text-muted ds-measure ds-mt-4">
+            Una lectura larga cada semana y tres notas cortas. Escribe aquí la
+            línea de posicionamiento del blog: qué se publica y para quién.
+          </p>
+        </div>
+      </section>
+
+      <div class="ds-container">
+        <!-- ============ FILTROS ============ -->
+        <section class="ds-mt-8" aria-label="Filtrar por categoría">
+          <div class="filters">
+            <a class="filter" href="index.html" aria-current="page">Todos</a>
+            <a class="filter" href="categoria.html">Primeros pasos</a>
+            <a class="filter" href="categoria.html">Rutinas</a>
+            <a class="filter" href="categoria.html">Material</a>
+            <a class="filter" href="categoria.html">Guías</a>
+            <span class="ds-spacer"></span>
+            <span class="ds-text-sm ds-text-subtle">24 artículos</span>
+          </div>
+        </section>
+
+        <!-- ============ DESTACADO ============ -->
+        <section class="ds-mt-6">
+          <a class="ds-card ds-card--interactive ds-card--flush post-card post-card--featured" href="articulo.html">
+            <div class="post-card__cover cover--empty" data-label="Portada 4:3">
+              <!-- <img src="/img/portada.jpg" alt="" /> -->
+            </div>
+            <div class="post-card__body">
+              <div class="ds-cluster ds-cluster--gap-2">
+                <span class="ds-badge ds-badge--primary ds-badge--pill">Destacado</span>
+                <span class="ds-badge ds-badge--pill">Primeros pasos</span>
+              </div>
+              <h2 class="post-card__title">
+                La guía completa para empezar: todo lo básico en una sola lectura
+              </h2>
+              <p class="post-card__excerpt">
+                Sin material caro y sin teoría de más. Lo que de verdad hace falta
+                la primera semana, en el orden correcto.
+              </p>
+              <div class="post-card__meta">
+                <span class="ds-avatar ds-avatar--xs">NA</span>
+                <span>Nombre del Autor</span>
+                <span aria-hidden="true">·</span>
+                <time datetime="2026-09-17">17 sep 2026</time>
+                <span aria-hidden="true">·</span>
+                <span>8 min de lectura</span>
+              </div>
+            </div>
+          </a>
+        </section>
+
+        <!-- ============ REJILLA + RAIL ============ -->
+        <div class="shell ds-mt-10">
+          <div>
+            <div class="section-title">
+              <h2 class="ds-text-xl">Lo último</h2>
+              <span class="ds-spacer"></span>
+              <span class="ds-text-sm ds-text-subtle">Ordenado por fecha</span>
+            </div>
+
+            <div class="ds-grid ds-grid--auto ds-grid--gap-5" style="--ds-grid-min: 17rem">
+              <a class="ds-card ds-card--interactive ds-card--flush post-card" href="articulo.html">
+                <div class="post-card__cover cover--empty" data-label="16:10"></div>
+                <div class="post-card__body">
+                  <span class="ds-badge ds-badge--pill ds-badge--sm ds-w-fit">Primeros pasos</span>
+                  <h3 class="post-card__title">Tres errores que cometí al principio y cómo evitarlos</h3>
+                  <p class="post-card__excerpt">Una frase de resumen que da contexto suficiente para decidir si abrir.</p>
+                  <div class="post-card__meta"><time datetime="2026-09-12">12 sep</time><span aria-hidden="true">·</span><span>5 min</span></div>
+                </div>
+              </a>
+
+              <a class="ds-card ds-card--interactive ds-card--flush post-card" href="articulo.html">
+                <div class="post-card__cover cover--empty" data-label="16:10"></div>
+                <div class="post-card__body">
+                  <span class="ds-badge ds-badge--pill ds-badge--sm ds-w-fit">Rutinas</span>
+                  <h3 class="post-card__title">Una rutina sencilla que sí se puede mantener</h3>
+                  <p class="post-card__excerpt">Qué hacer cada semana, en qué orden y cuánto tiempo pedirle a la agenda.</p>
+                  <div class="post-card__meta"><time datetime="2026-09-05">5 sep</time><span aria-hidden="true">·</span><span>6 min</span></div>
+                </div>
+              </a>
+
+              <a class="ds-card ds-card--interactive ds-card--flush post-card" href="articulo.html">
+                <div class="post-card__cover cover--empty" data-label="16:10"></div>
+                <div class="post-card__body">
+                  <span class="ds-badge ds-badge--pill ds-badge--sm ds-w-fit">Material</span>
+                  <h3 class="post-card__title">Lo que nadie te cuenta sobre el material básico</h3>
+                  <p class="post-card__excerpt">Comparativa breve, con precios reales y una recomendación clara.</p>
+                  <div class="post-card__meta"><time datetime="2026-08-29">29 ago</time><span aria-hidden="true">·</span><span>4 min</span></div>
+                </div>
+              </a>
+
+              <a class="ds-card ds-card--interactive ds-card--flush post-card" href="articulo.html">
+                <div class="post-card__cover cover--empty" data-label="16:10"></div>
+                <div class="post-card__body">
+                  <span class="ds-badge ds-badge--pill ds-badge--sm ds-w-fit">Guías</span>
+                  <h3 class="post-card__title">Cinco ideas cortas para aplicar este fin de semana</h3>
+                  <p class="post-card__excerpt">Nada que requiera comprar algo: sólo orden y una hora de tiempo.</p>
+                  <div class="post-card__meta"><time datetime="2026-08-22">22 ago</time><span aria-hidden="true">·</span><span>3 min</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- ============ ARCHIVO ============ -->
+            <div class="section-title ds-mt-12">
+              <h2 class="ds-text-xl">Archivo</h2>
+            </div>
+
+            <div class="ds-card ds-card--flush">
+              <div class="ds-stack ds-stack--ruled">
+                <a class="archive-row" href="articulo.html">
+                  <span class="archive-row__index">05</span>
+                  <span class="archive-row__title">Un caso real, explicado paso a paso</span>
+                  <span class="archive-row__meta">15 ago · 7 min</span>
+                </a>
+                <a class="archive-row" href="articulo.html">
+                  <span class="archive-row__index">06</span>
+                  <span class="archive-row__title">Preguntas de la comunidad, respondidas</span>
+                  <span class="archive-row__meta">8 ago · 5 min</span>
+                </a>
+                <a class="archive-row" href="articulo.html">
+                  <span class="archive-row__index">07</span>
+                  <span class="archive-row__title">Lo que leímos fuera del blog este mes</span>
+                  <span class="archive-row__meta">1 ago · 4 min</span>
+                </a>
+                <a class="archive-row" href="articulo.html">
+                  <span class="archive-row__index">08</span>
+                  <span class="archive-row__title">Cómo organizo la semana en 20 minutos</span>
+                  <span class="archive-row__meta">25 jul · 6 min</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="ds-mt-6 ds-text-center">
+              <a class="ds-button ds-button--secondary" href="categoria.html">Ver más artículos</a>
+            </div>
+          </div>
+
+          <!-- ============ RAIL ============ -->
+          <aside class="rail" aria-label="Contenido relacionado">
+            <div class="ds-card ds-card--sm">
+              <div class="ds-card__body">
+                <span class="ds-eyebrow">Sobre el blog</span>
+                <div class="ds-cluster ds-cluster--gap-3 ds-mt-4">
+                  <span class="ds-avatar ds-avatar--lg">NA</span>
+                  <div>
+                    <div class="ds-fw-bold">Nombre del Autor</div>
+                    <div class="ds-text-xs ds-text-subtle">Publica cada jueves</div>
+                  </div>
+                </div>
+                <p class="ds-text-sm ds-text-muted ds-mt-4">
+                  Una línea de bio. Qué escribes aquí, desde cuándo y por qué
+                  merece la pena suscribirse.
+                </p>
+              </div>
+            </div>
+
+            <div class="ds-card ds-card--sm">
+              <div class="ds-card__body">
+                <span class="ds-eyebrow">Más leídos</span>
+                <div class="ds-stack ds-stack--gap-3 ds-mt-4">
+                  <a class="post-mini" href="articulo.html">
+                    <span class="post-mini__index">01</span>
+                    <span><span class="post-mini__title">Tres errores del principio</span><span class="post-mini__meta">5 min</span></span>
+                  </a>
+                  <a class="post-mini" href="articulo.html">
+                    <span class="post-mini__index">02</span>
+                    <span><span class="post-mini__title">Una rutina que se mantiene</span><span class="post-mini__meta">6 min</span></span>
+                  </a>
+                  <a class="post-mini" href="articulo.html">
+                    <span class="post-mini__index">03</span>
+                    <span><span class="post-mini__title">El material básico, comparado</span><span class="post-mini__meta">4 min</span></span>
+                  </a>
+                  <a class="post-mini" href="articulo.html">
+                    <span class="post-mini__index">04</span>
+                    <span><span class="post-mini__title">Preguntas de la comunidad</span><span class="post-mini__meta">5 min</span></span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- ============ NEWSLETTER ============ -->
+        <section class="ds-mt-12" id="newsletter">
+          <div class="newsletter">
+            <h2 class="newsletter__title">Un email por semana, nada más</h2>
+            <p class="newsletter__text">
+              Lo nuevo del blog, resumido. Sin spam y se cancela en un clic.
+            </p>
+            <form class="newsletter__form" data-ds-newsletter novalidate>
+              <label class="ds-visually-hidden" for="email-home">Correo electrónico</label>
+              <input class="newsletter__input" id="email-home" type="email" name="email"
+                     placeholder="tu@correo.com" autocomplete="email" required />
+              <button class="ds-button ds-button--primary newsletter__button" type="submit">Suscribirme</button>
+            </form>
+            <p class="newsletter__status" data-newsletter-status role="status" aria-live="polite"></p>
+            <p class="newsletter__note">Ya somos 1.284 suscriptores.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="ds-container site-footer__inner">
+        <a class="brand" href="index.html"><span class="brand__mark">B</span> Nombre del Blog</a>
+        <nav class="footer-links" aria-label="Pie">
+          <a href="categoria.html">Archivo</a>
+          <a href="#newsletter">Newsletter</a>
+          <a href="feed.xml">RSS</a>
+          <a href="#">Contacto</a>
+          <a href="#">Privacidad</a>
+        </nav>
+        <span class="ds-text-xs ds-text-subtle">© 2026 · Plantilla MVP</span>
+      </div>
+    </footer>
+  </body>
+</html>

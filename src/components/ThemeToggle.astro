@@ -1,0 +1,74 @@
+---
+import Icon from './Icon.astro';
+---
+
+<!-- El atributo `data-theme` del <html> ya viene puesto por el script en línea
+     de BaseHead, así que este botón solo lo cambia. La etiqueta accesible la
+     escribe el script, porque depende del tema que esté activo. -->
+<button class="theme-toggle" type="button" data-theme-toggle aria-label="Cambiar de tema">
+	<Icon name="sun" data-icon="sun" />
+	<Icon name="moon" data-icon="moon" />
+</button>
+
+<script>
+	const KEY = 'tema';
+	const root = document.documentElement;
+	const COLORS = { dark: '#161513', light: '#f4f1e9' } as const;
+	type Theme = keyof typeof COLORS;
+
+	const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+	const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+	// localStorage puede lanzar (modo privado, cookies bloqueadas). Que falle el
+	// recuerdo no debe romper el botón.
+	const remember = (theme: Theme) => {
+		try {
+			localStorage.setItem(KEY, theme);
+		} catch {}
+	};
+
+	const stored = (): Theme | null => {
+		try {
+			const value = localStorage.getItem(KEY);
+			return value === 'light' || value === 'dark' ? value : null;
+		} catch {
+			return null;
+		}
+	};
+
+	const apply = (theme: Theme) => {
+		root.dataset.theme = theme;
+		if (meta) meta.content = COLORS[theme];
+
+		const label = theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+		buttons.forEach((button) => {
+			button.setAttribute('aria-label', label);
+			button.title = label;
+		});
+	};
+
+	apply(root.dataset.theme === 'light' ? 'light' : 'dark');
+
+	buttons.forEach((button) =>
+		button.addEventListener('click', () => {
+			const next: Theme = root.dataset.theme === 'light' ? 'dark' : 'light';
+			remember(next);
+
+			// Sin esto, cada elemento con `transition` de color hace su propio
+			// desvanecido y el cambio se ve como un barrido. Dos frames bastan.
+			root.dataset.themeSwitching = '';
+			apply(next);
+			requestAnimationFrame(() =>
+				requestAnimationFrame(() => delete root.dataset.themeSwitching),
+			);
+		}),
+	);
+
+	// Mientras nadie elija a mano, el sitio sigue al sistema: si cambia a media
+	// tarde, la página abierta cambia con él.
+	window
+		.matchMedia('(prefers-color-scheme: light)')
+		.addEventListener('change', (event) => {
+			if (!stored()) apply(event.matches ? 'light' : 'dark');
+		});
+</script>

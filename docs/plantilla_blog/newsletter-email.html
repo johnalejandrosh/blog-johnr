@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Boletín semanal</title>
+
+    <!--
+      PLANTILLA DE EMAIL — lee esto antes de tocarla.
+
+      El email NO puede usar el CSS del sistema de diseño: los clientes de
+      correo no soportan custom properties, ni hojas externas, ni grid. Por eso
+      aquí los colores van en hexadecimal literal y la maquetación es con
+      <table>. Los valores son los MISMOS tokens del sistema, copiados a mano:
+
+        primario  #4c63f0   (--ds-color-brand-500)
+        hover     #3a4cd8   (--ds-color-brand-600)
+        texto     #161b25   (--ds-color-neutral-900)
+        apagado   #4c5872   (--ds-color-neutral-600)
+        sutil     #66718a   (--ds-color-neutral-500)
+        borde     #e4e9f2   (--ds-color-neutral-200)
+        lienzo    #eff2f8   (--ds-color-neutral-100)
+
+      Si cambias la marca en el sistema, actualiza también estos siete valores.
+      El ancho es 600 px: el máximo seguro en el panel de vista previa de
+      Outlook de escritorio.
+    -->
+
+    <!--[if mso]>
+      <style>
+        body, table, td, a { font-family: Arial, Helvetica, sans-serif !important; }
+      </style>
+    <![endif]-->
+
+    <style>
+      body { margin: 0; padding: 0; background: #eff2f8; -webkit-text-size-adjust: 100%; }
+      a { color: #3a4cd8; }
+      @media only screen and (max-width: 620px) {
+        .col { display: block !important; width: 100% !important; padding-bottom: 24px !important; }
+        .pad { padding-left: 20px !important; padding-right: 20px !important; }
+        .h1 { font-size: 26px !important; line-height: 32px !important; }
+      }
+    </style>
+  </head>
+
+  <body style="margin:0; padding:0; background:#eff2f8;">
+    <!-- Preencabezado: es el texto que se ve en la bandeja junto al asunto. -->
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all;">
+      Los 5 artículos de esta semana: la guía completa para empezar, tres lecturas cortas y el resumen rápido.
+    </div>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#eff2f8;">
+      <tr>
+        <td align="center" style="padding:32px 12px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"
+                 style="width:600px; max-width:600px; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #e4e9f2;">
+
+            <!-- Barra de marca -->
+            <tr><td height="4" bgcolor="#4c63f0" style="height:4px; line-height:4px; font-size:0;">&nbsp;</td></tr>
+
+            <!-- Cabecera -->
+            <tr>
+              <td class="pad" style="padding:28px 32px 0 32px; font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td align="left" style="font-size:18px; font-weight:800; color:#161b25; letter-spacing:-0.3px;">
+                      Nombre del Blog
+                    </td>
+                    <td align="right" style="font-size:12px; color:#66718a;">
+                      Nº 12 &nbsp;·&nbsp; 17 sep 2026
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding-top:6px; font-size:13px; color:#4c5872;">
+                      Boletín semanal · lo mejor publicado en el blog
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Categorías -->
+            <tr>
+              <td class="pad" style="padding:20px 32px 0 32px; font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif; font-size:13px; color:#66718a;">
+                <a href="https://ejemplo.com/primeros-pasos" style="color:#3a4cd8; text-decoration:none; font-weight:600;">Primeros pasos</a>
+                &nbsp;·&nbsp;
+                <a href="https://ejemplo.com/rutinas" style="color:#3a4cd8; text-decoration:none; font-weight:600;">Rutinas</a>
+                &nbsp;·&nbsp;
+                <a href="https://ejemplo.com/material" style="color:#3a4cd8; text-decoration:none; font-weight:600;">Material</a>
+                &nbsp;·&nbsp;
+                <a href="https://ejemplo.com/archivo" style="color:#66718a; text-decoration:none;">Ver todo el archivo</a>
+              </td>
+            </tr>
+
+            <!-- Destacado -->
+            <tr>
+              <td class="pad" style="padding:28px 32px 0 32px; font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;">
+                <div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#4c63f0; padding-bottom:14px;">
+                  Destacado de la semana
+                </div>
+
+                <!-- Sustituir por: <img src="https://…" alt="…" width="536" style="display:block; width:100%; border-radius:12px;" /> -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                       style="background:#eff2f8; border-radius:12px;">
+                  <tr>
+                    <td align="center" height="220"
+                        style="height:220px; font-size:12px; color:#66718a; padding:16px;">
+                      [ Imagen destacada 536&times;220 ]
+                    </td>
+                  </tr>
+                </table>
+
+                <h1 class="h1" style="margin:20px 0 0 0; font-size:28px; line-height:34px; font-weight:800; letter-spacing:-0.6px; color:#161b25;">
+                  <a href="https://ejemplo.com/articulo-destacado" style="color:#161b25; text-decoration:none;">
+                    La guía completa para empezar: todo lo básico en una sola lectura
+                  </a>
+                </h1>
+
+                <p style="margin:12px 0 0 0; font-size:15px; line-height:24px; color:#4c5872;">
+                  Sin material caro y sin teoría de más. Lo que de verdad hace falta la
+                  primera semana, en el orden correcto, y los tres errores que casi todo
+                  el mundo comete al arrancar.
+                </p>
+
+                <div style="padding-top:12px; font-size:12px; color:#66718a;">
+                  8 min de lectura · por Nombre del Autor
+                </div>
+
+                <!-- Botón: celda con fondo, que es lo único que Outlook renderiza fiable -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;">
+                  <tr>
+                    <td align="center" bgcolor="#4c63f0" style="border-radius:8px;">
+                      <a href="https://ejemplo.com/articulo-destacado"
+                         style="display:inline-block; padding:13px 26px; font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none; border-radius:8px;">
+                        Leer el artículo
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Separador -->
+            <tr>
+              <td class="pad" style="padding:32px 32px 0 32px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr><td height="1" bgcolor="#e4e9f2" style="height:1px; line-height:1px; font-size:0;">&nbsp;</td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- También esta semana -->
+            <tr>
+              <td class="pad" style="padding:24px 32px 0 32px; font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;">
+                <div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#66718a; padding-bottom:16px;">
+                  También esta semana
+                </div>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td style="padding-bottom:18px;">
+                      <a href="https://ejemplo.com/a1" style="font-size:16px; font-weight:700; color:#161b25; text-decoration:none; line-height:22px;">
+                        Tres errores que cometí al principio
+                      </a>
+                      <div style="padding-top:5px; font-size:13px; line-height:20px; color:#4c5872;">
+                        Y cómo evitarlos sin complicarse la primera semana.
+                      </div>
+                      <div style="padding-top:5px; font-size:12px; color:#66718a;">12 sep · 5 min</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-bottom:18px;">
+                      <a href="https://ejemplo.com/a2" style="font-size:16px; font-weight:700; color:#161b25; text-decoration:none; line-height:22px;">
+                        Una rutina sencilla que sí se puede mantener
+                      </a>
+                      <div style="padding-top:5px; font-size:13px; line-height:20px; color:#4c5872;">
+                        Qué hacer cada semana y cuánto tiempo pedirle a la agenda.
+                      </div>
+                      <div style="padding-top:5px; font-size:12px; color:#66718a;">5 sep · 6 min</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <a href="https://ejemplo.com/a3" style="font-size:16px; font-weight:700; color:#161b25; text-decoration:none; line-height:22px;">
+                        Lo que nadie te cuenta sobre el material básico
+                      </a>
+                      <div style="padding-top:5px; font-size:13px; line-height:20px; color:#4c5872;">
+                        Comparativa breve, con precios reales y una recomendación.
+                      </div>
+                      <div style="padding-top:5px; font-size:12px; color:#66718a;">29 ago · 4 min</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Pie -->
+            <tr>
+              <td class="pad" style="padding:32px; font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                       style="background:#eff2f8; border-radius:12px;">
+                  <tr>
+                    <td style="padding:20px 22px; font-size:12px; line-height:20px; color:#66718a;">
+                      Recibes este correo porque te suscribiste en
+                      <a href="https://ejemplo.com" style="color:#3a4cd8; text-decoration:none;">ejemplo.com</a>.<br />
+                      <a href="{{unsubscribe_url}}" style="color:#66718a; text-decoration:underline;">Darse de baja</a>
+                      &nbsp;·&nbsp;
+                      <a href="https://ejemplo.com/preferencias" style="color:#66718a; text-decoration:underline;">Preferencias</a>
+                      <br /><br />
+                      © 2026 Nombre del Blog · Dirección postal, requerida por la
+                      normativa anti-spam.
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

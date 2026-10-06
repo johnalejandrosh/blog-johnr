@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<BaseLayout title={`404 · ${SITE_TITLE}`} description="Esta página no existe.">
+	<div class="container">
+		<section class="section section--last">
+			<div class="terminal">
+				<div class="terminal__bar" aria-hidden="true"><span></span><span></span><span></span></div>
+				<pre class="terminal__body"><span class="prompt__path">~</span> <span class="prompt__sign">$</span> cd {Astro.url.pathname}
+bash: cd: {Astro.url.pathname}: No such file or directory
+<span class="prompt__path">~</span> <span class="prompt__sign">$</span> <span class="brand__cursor"></span></pre>
+			</div>
+			<div class="notfound">
+				<h1 class="page-hero__title">404: aquí no hay nada</h1>
+				<p class="page-hero__text">
+					Puede que el enlace esté viejo o que la entrada haya cambiado de dirección.
+				</p>
+				<div class="cluster">
+					<a class="button button--primary" href="/">ir al inicio</a>
+					<a class="button" href="/blog">ver el blog</a>
+				</div>
+			</div>
+		</section>
+	</div>
+</BaseLayout>

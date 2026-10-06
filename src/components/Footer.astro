@@ -1,0 +1,38 @@
+---
+import { AUTHOR, SITE_TITLE } from '../consts';
+import { moonPhase } from '../lib/sky';
+
+const now = new Date();
+const year = now.getUTCFullYear();
+const build = now.toISOString().slice(0, 10);
+const moon = moonPhase(now);
+---
+
+<footer class="site-footer">
+	<div class="container site-footer__inner">
+		<nav class="footer-links" aria-label="Pie">
+			<a href="/blog">blog/</a>
+			<a href="/categoria">temas/</a>
+			<a href="/portafolio">portafolio/</a>
+			<a href="/rss.xml">rss.xml</a>
+		</nav>
+		<p class="footer-note">
+			© {year} {AUTHOR.name}. Escrito a mano, compilado con Astro.
+		</p>
+	</div>
+
+	<!-- Barra de estado al estilo de un editor: datos reales del build. -->
+	<div class="statusline" aria-label="Datos de compilación">
+		<div class="container statusline__inner">
+			<span class="statusline__mode">NORMAL</span>
+			<span>{SITE_TITLE}</span>
+			<span class="statusline__spacer"></span>
+			<span title="Fase lunar el día de la compilación">
+				☾ {moon.name} · {Math.round(moon.illumination * 100)} %
+			</span>
+			<span>utf-8</span>
+			<span>es-CO</span>
+			<span>build {build}</span>
+		</div>
+	</div>
+</footer>

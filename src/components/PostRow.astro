@@ -1,0 +1,21 @@
+---
+// Una fila del listado tipo `ls -lt`: fecha, carpeta, título y peso.
+import { isoDate, postUrl, readingTime, type Post } from '../lib/posts';
+
+interface Props {
+	post: Post;
+}
+
+const { post } = Astro.props;
+const { title, description, pubDate, category } = post.data;
+---
+
+<a class="ls-row" href={postUrl(post)}>
+	<time class="ls-row__date" datetime={pubDate.toISOString()}>{isoDate(pubDate)}</time>
+	<span class="ls-row__cat">{category}/</span>
+	<span class="ls-row__main">
+		<span class="ls-row__title">{title}</span>
+		<span class="ls-row__desc">{description}</span>
+	</span>
+	<span class="ls-row__time">{readingTime(post.body)} min</span>
+</a>

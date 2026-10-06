@@ -1,0 +1,35 @@
+---
+import { render } from 'astro:content';
+import BlogPost from '../../layouts/BlogPost.astro';
+import { getPosts, type Post } from '../../lib/posts';
+
+export async function getStaticPaths() {
+	const posts = await getPosts();
+
+	return posts.map((post) => {
+		const others = posts.filter((p) => p.id !== post.id);
+		// Primero los de la misma categoría; si no llegan a dos, se completa con
+		// los más recientes.
+		const sameCategory = others.filter((p) => p.data.category === post.data.category);
+		const related = [...sameCategory, ...others.filter((p) => !sameCategory.includes(p))].slice(0, 2);
+
+		return {
+			params: { slug: post.id },
+			props: { post, related, popular: others.filter((p) => !related.includes(p)).slice(0, 4) },
+		};
+	});
+}
+
+interface Props {
+	post: Post;
+	related: Post[];
+	popular: Post[];
+}
+
+const { post, related, popular } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BlogPost post={post} related={related} popular={popular}>
+	<Content />
+</BlogPost>

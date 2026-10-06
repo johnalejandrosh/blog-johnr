@@ -1,0 +1,33 @@
+---
+// La Luna tal como estaba el día del build. El terminador es media elipse cuyo
+// radio horizontal encoge hasta cero en cuarto creciente y menguante.
+import { moonPhase } from '../lib/sky';
+
+const SYNODIC_HALF = 29.530588853 / 2;
+const moon = moonPhase();
+const waxing = moon.age < SYNODIC_HALF;
+const k = moon.illumination;
+
+const R = 28;
+const C = 32;
+const rx = (R * Math.abs(1 - 2 * k)).toFixed(2);
+// Creciente: limbo iluminado a la derecha. Menguante: a la izquierda.
+const limbSweep = waxing ? 1 : 0;
+const termSweep = waxing ? (k < 0.5 ? 0 : 1) : k < 0.5 ? 1 : 0;
+const lit = `M${C},${C - R} A${R},${R} 0 0 ${limbSweep} ${C},${C + R} A${rx},${R} 0 0 ${termSweep} ${C},${C - R} Z`;
+const days = Math.floor(moon.age);
+---
+
+<div class="moon">
+	<svg viewBox="0 0 64 64" aria-hidden="true">
+		<circle class="moon__dark" cx={C} cy={C} r={R}></circle>
+		<path class="moon__lit" d={lit}></path>
+	</svg>
+	<div>
+		<div class="moon__name">{moon.name}</div>
+		<div class="moon__meta">
+			{Math.round(k * 100)} % iluminada · {days}
+			{days === 1 ? ' día' : ' días'}
+		</div>
+	</div>
+</div>

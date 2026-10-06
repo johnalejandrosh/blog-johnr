@@ -1,0 +1,48 @@
+---
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<button class="button button--secondary button--sm" data-share data-share-title={title}>
+	<svg class="button__icon" viewBox="0 0 24 24" aria-hidden="true">
+		<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"></path>
+		<path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path>
+	</svg>
+	<span data-share-label>Copiar enlace</span>
+</button>
+
+<script>
+	// Web Share API en móvil; copiar al portapapeles en escritorio. El texto del
+	// botón confirma la acción y se restaura solo.
+	document.querySelectorAll<HTMLButtonElement>('[data-share]').forEach((button) => {
+		const label = button.querySelector<HTMLElement>('[data-share-label]') ?? button;
+		const original = label.textContent ?? '';
+		let timer: ReturnType<typeof setTimeout>;
+
+		const flash = (message: string) => {
+			clearTimeout(timer);
+			label.textContent = message;
+			timer = setTimeout(() => (label.textContent = original), 2000);
+		};
+
+		button.addEventListener('click', async () => {
+			const url = window.location.href;
+			const title = button.dataset.shareTitle || document.title;
+
+			try {
+				if (navigator.share) {
+					await navigator.share({ title, url });
+					return;
+				}
+				await navigator.clipboard.writeText(url);
+				flash('¡Enlace copiado!');
+			} catch (error) {
+				// AbortError = el usuario cerró la hoja de compartir. No es un fallo.
+				if ((error as Error)?.name !== 'AbortError') flash('No se pudo copiar');
+			}
+		});
+	});
+</script>

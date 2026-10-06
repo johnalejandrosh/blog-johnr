@@ -1,0 +1,67 @@
+---
+interface Props {
+	id?: string;
+	title?: string;
+	text?: string;
+}
+
+const {
+	id = 'newsletter',
+	title = 'Recibe la próxima entrada',
+	text = 'Te escribo cuando publico algo nuevo, nada más. Si prefieres no dar tu correo, también está el RSS.',
+} = Astro.props;
+
+const inputId = `email-${id}`;
+---
+
+<section class="newsletter" id={id}>
+	<p class="newsletter__prompt" aria-hidden="true">$ subscribe --to johnr.log</p>
+	<h2 class="newsletter__title">{title}</h2>
+	<p class="newsletter__text">{text}</p>
+
+	<form class="newsletter__form" data-newsletter novalidate>
+		<label class="sr-only" for={inputId}>Correo electrónico</label>
+		<input
+			class="newsletter__input"
+			id={inputId}
+			type="email"
+			name="email"
+			placeholder="tu@correo.com"
+			autocomplete="email"
+			required
+		/>
+		<button class="button button--primary" type="submit">suscribirme</button>
+	</form>
+
+	<p class="newsletter__status" data-newsletter-status role="status" aria-live="polite"></p>
+	<p class="newsletter__note">o por <a href="/rss.xml">rss.xml</a></p>
+</section>
+
+<script>
+	// Modo demostración: valida y confirma sin enviar nada. Para conectarlo de
+	// verdad basta con un POST al proveedor de correo desde aquí.
+	document.querySelectorAll<HTMLFormElement>('form[data-newsletter]').forEach((form) => {
+		const input = form.querySelector<HTMLInputElement>('input[type="email"]')!;
+		const status = form.parentElement?.querySelector<HTMLElement>('[data-newsletter-status]');
+
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			const valid = input.checkValidity() && input.value.includes('@');
+
+			input.setAttribute('aria-invalid', String(!valid));
+			if (!status) return;
+
+			if (!valid) {
+				status.dataset.state = 'error';
+				status.textContent = 'error: ese correo parece incompleto.';
+				input.focus();
+				return;
+			}
+
+			status.dataset.state = 'ok';
+			status.textContent = 'ok: te aviso cuando salga la próxima entrada.';
+			form.reset();
+			input.removeAttribute('aria-invalid');
+		});
+	});
+</script>
