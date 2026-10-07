@@ -1,4 +1,6 @@
 ---
+import { SITE_TITLE } from '../consts';
+
 interface Props {
 	id?: string;
 	title?: string;
@@ -12,6 +14,7 @@ const {
 } = Astro.props;
 
 const inputId = `email-${id}`;
+const nameId = `name-${id}`;
 ---
 
 <section class="newsletter" id={id}>
@@ -19,7 +22,16 @@ const inputId = `email-${id}`;
 	<h2 class="newsletter__title">{title}</h2>
 	<p class="newsletter__text">{text}</p>
 
-	<form class="newsletter__form" data-newsletter novalidate>
+	<form class="newsletter__form" data-newsletter data-blog-name={SITE_TITLE} novalidate>
+		<label class="sr-only" for={nameId}>Nombre (opcional)</label>
+		<input
+			class="newsletter__input"
+			id={nameId}
+			type="text"
+			name="name"
+			placeholder="tu nombre (opcional)"
+			autocomplete="name"
+		/>
 		<label class="sr-only" for={inputId}>Correo electrónico</label>
 		<input
 			class="newsletter__input"
@@ -38,30 +50,60 @@ const inputId = `email-${id}`;
 </section>
 
 <script>
-	// Modo demostración: valida y confirma sin enviar nada. Para conectarlo de
-	// verdad basta con un POST al proveedor de correo desde aquí.
+	const ENDPOINT = 'https://suscriptions-api.johnr.top/suscripciones';
+
 	document.querySelectorAll<HTMLFormElement>('form[data-newsletter]').forEach((form) => {
 		const input = form.querySelector<HTMLInputElement>('input[type="email"]')!;
+		const nameInput = form.querySelector<HTMLInputElement>('input[name="name"]');
+		const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
 		const status = form.parentElement?.querySelector<HTMLElement>('[data-newsletter-status]');
 
-		form.addEventListener('submit', (event) => {
+		const setStatus = (state: 'ok' | 'error' | 'pending', text: string) => {
+			if (!status) return;
+			status.dataset.state = state;
+			status.textContent = text;
+		};
+
+		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
-			const valid = input.checkValidity() && input.value.includes('@');
+			const email = input.value.trim();
+			const valid = input.checkValidity() && email.includes('@');
 
 			input.setAttribute('aria-invalid', String(!valid));
-			if (!status) return;
 
 			if (!valid) {
-				status.dataset.state = 'error';
-				status.textContent = 'error: ese correo parece incompleto.';
+				setStatus('error', 'error: ese correo parece incompleto.');
 				input.focus();
 				return;
 			}
 
-			status.dataset.state = 'ok';
-			status.textContent = 'ok: te aviso cuando salga la próxima entrada.';
-			form.reset();
-			input.removeAttribute('aria-invalid');
+			// Solo el correo es obligatorio: sin nombre, se usa lo que va antes de la @.
+			const name = nameInput?.value.trim() || email.split('@')[0];
+
+			if (button) button.disabled = true;
+			setStatus('pending', 'enviando…');
+
+			try {
+				const res = await fetch(ENDPOINT, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						name,
+						email,
+						enlace: window.location.href,
+						blog_name: form.dataset.blogName,
+					}),
+				});
+				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+				setStatus('ok', 'ok: te aviso cuando salga la próxima entrada.');
+				form.reset();
+				input.removeAttribute('aria-invalid');
+			} catch {
+				setStatus('error', 'error: no pude registrarte, inténtalo de nuevo en un rato.');
+			} finally {
+				if (button) button.disabled = false;
+			}
 		});
 	});
 </script>
