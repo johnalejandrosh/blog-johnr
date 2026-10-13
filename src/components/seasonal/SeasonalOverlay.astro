@@ -1,0 +1,31 @@
+---
+// Monta el tema de temporada que toca hoy (ver `src/seasonal.config.ts`). Si no
+// hay ninguno, no pinta nada y tampoco llega su CSS ni su JS al navegador.
+import { SEASONAL_THEMES, SEASONAL_TIMEZONE } from '../../seasonal.config';
+import { activeSeasonalTheme } from '../../lib/seasons';
+import October from './October.astro';
+import Christmas from './Christmas.astro';
+
+const active = activeSeasonalTheme();
+// Un tema forzado a mano no caduca; uno del calendario, sí.
+const season = active && !active.forced ? SEASONAL_THEMES[active.id].season : null;
+---
+
+{active?.id === 'october' && <October {...SEASONAL_THEMES.october.options} />}
+{active?.id === 'christmas' && <Christmas {...SEASONAL_THEMES.christmas.options} />}
+
+{
+	season && (
+		<script is:inline define:vars={{ from: season.from, until: season.until, timeZone: SEASONAL_TIMEZONE }}>
+			// Caducidad: el HTML se generó en temporada, pero si nadie recompila
+			// al terminar, el tema se quita aquí. Va en línea para correr antes
+			// que los scripts del tema, que entonces no encuentran nada que animar.
+			// Misma lógica que `inSeason` en src/lib/seasons.ts.
+			const parts = new Intl.DateTimeFormat('en-US', { timeZone, month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+			const get = (type) => parts.find((p) => p.type === type).value;
+			const today = `${get('month')}-${get('day')}`;
+			const inside = from <= until ? today >= from && today <= until : today >= from || today <= until;
+			if (!inside) document.querySelector('[data-seasonal]')?.remove();
+		</script>
+	)
+}
