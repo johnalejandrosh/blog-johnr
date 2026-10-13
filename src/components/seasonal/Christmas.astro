@@ -1,0 +1,678 @@
+---
+// Tema de diciembre: nieve que cae (y se aparta del puntero), una guirnalda de
+// luces en el borde de arriba, regalos y un arbolito en las esquinas de abajo y,
+// de vez en cuando, el trineo de Santa cruzando el cielo. Igual que octubre:
+// capa fija por encima de la página que no recibe clics.
+
+interface Props {
+	snowflakes: number;
+	lights: boolean;
+	gifts: boolean;
+	tree: boolean;
+	sleigh: boolean;
+}
+
+const { snowflakes, lights, gifts, tree, sleigh } = Astro.props;
+
+const f = (n: number) => +n.toFixed(1);
+
+// Capa de nieve sobre la tapa de una caja: plana arriba y con goterones abajo.
+const snowCap = (x: number, y: number, w: number) => {
+	let d = `M${x} ${y + 5}V${y + 2}Q${x} ${y - 1} ${x + 3} ${y - 1}H${x + w - 3}Q${x + w} ${y - 1} ${x + w} ${y + 2}V${y + 5}`;
+	const n = Math.max(3, Math.round(w / 9));
+	const step = w / n;
+	for (let i = n; i > 0; i--) {
+		d += `Q${f(x + (i - 0.5) * step)} ${y + (i % 2 ? 10 : 7.5)} ${f(x + (i - 1) * step)} ${y + 5}`;
+	}
+	return `${d}Z`;
+};
+
+// Caja de regalo con tapa, cinta en cruz, lazo y nieve encima.
+type Gift = { x: number; y: number; w: number; h: number; box: string; ribbon: string };
+const GIFTS: Gift[] = [
+	{ x: 8, y: 52, w: 72, h: 62, box: 'red', ribbon: 'gold' },
+	{ x: 88, y: 72, w: 54, h: 42, box: 'green', ribbon: 'red' },
+	{ x: 97, y: 40, w: 36, h: 25, box: 'blue', ribbon: 'gold' },
+	{ x: 147, y: 94, w: 20, h: 20, box: 'gold', ribbon: 'red' },
+];
+const lid = 0.2; // alto de la tapa respecto a la caja
+
+const giftsSvg = GIFTS.map(({ x, y, w, h, box, ribbon }) => {
+	const lh = Math.max(8, h * lid);
+	const cx = x + w / 2;
+	const rw = Math.max(4, w * 0.11);
+	const bow = Math.max(4, w * 0.13);
+	return `
+	<g class="gift gift--${box}">
+		<rect class="gift__box" x="${x}" y="${y}" width="${w}" height="${h}" />
+		<rect class="gift__ribbon gift__ribbon--${ribbon}" x="${f(cx - rw / 2)}" y="${y}" width="${f(rw)}" height="${h}" />
+		<rect class="gift__ribbon gift__ribbon--${ribbon}" x="${x}" y="${f(y + h * 0.42)}" width="${w}" height="${f(rw)}" />
+		<rect class="gift__lid" x="${x - 4}" y="${f(y - lh + 2)}" width="${w + 8}" height="${f(lh)}" rx="1.5" />
+		<rect class="gift__ribbon gift__ribbon--${ribbon}" x="${f(cx - rw / 2)}" y="${f(y - lh + 2)}" width="${f(rw)}" height="${f(lh)}" />
+		<path class="snow-cap" d="${snowCap(x - 4, f(y - lh + 2), w + 8)}" />
+		<g class="gift__bow gift__ribbon--${ribbon}">
+			<ellipse cx="${f(cx - bow * 0.9)}" cy="${f(y - lh - bow * 0.3)}" rx="${f(bow)}" ry="${f(bow * 0.55)}" transform="rotate(-25 ${f(cx - bow * 0.9)} ${f(y - lh - bow * 0.3)})" />
+			<ellipse cx="${f(cx + bow * 0.9)}" cy="${f(y - lh - bow * 0.3)}" rx="${f(bow)}" ry="${f(bow * 0.55)}" transform="rotate(25 ${f(cx + bow * 0.9)} ${f(y - lh - bow * 0.3)})" />
+			<circle cx="${f(cx)}" cy="${f(y - lh + 1)}" r="${f(bow * 0.4)}" />
+		</g>
+	</g>`;
+}).join('');
+
+// Estrella de cinco puntas para la punta del árbol.
+const starPoints = Array.from({ length: 10 }, (_, i) => {
+	const r = i % 2 ? 4.4 : 10;
+	const a = -Math.PI / 2 + (i * Math.PI) / 5;
+	return `${f(60 + r * Math.cos(a))},${f(14 + r * Math.sin(a))}`;
+}).join(' ');
+
+// Bolas del árbol: posición y color. El retraso las hace brillar a destiempo.
+const ORNAMENTS = [
+	[52, 50, 'red'],
+	[70, 56, 'gold'],
+	[42, 82, 'blue'],
+	[64, 92, 'red'],
+	[82, 84, 'gold'],
+	[30, 120, 'gold'],
+	[52, 128, 'blue'],
+	[76, 126, 'red'],
+	[96, 118, 'blue'],
+] as const;
+
+// Trineo con Santa y dos renos, en silueta, mirando a la derecha. El reno de
+// delante lleva la nariz roja.
+const reindeer = (ox: number) => `
+	<ellipse cx="${ox + 16}" cy="30" rx="13" ry="6" />
+	<path class="sleigh__line sleigh__line--thick" d="M${ox + 25} 28L${ox + 32} 19" />
+	<ellipse cx="${ox + 35}" cy="17" rx="5.5" ry="3.3" transform="rotate(-15 ${ox + 35} 17)" />
+	<path class="sleigh__line" d="M${ox + 32} 14l-3 -7m1.5 3l-4 -1M${ox + 34} 14l1 -7m-0.6 3l3 -2" />
+	<path class="sleigh__line sleigh__line--legs" d="M${ox + 26} 33l9 4M${ox + 23} 34l8 7M${ox + 7} 33l-9 3M${ox + 9} 34l-7 7" />
+	<path d="M${ox + 3} 27l-4 -3l1 5Z" />`;
+
+const sleighSvg = `<svg class="sleigh-art" viewBox="-4 0 186 56">
+	<path class="sleigh__line sleigh__line--reins" d="M60 30L96 27M100 26L144 19" />
+	${reindeer(72)}
+	${reindeer(120)}
+	<circle class="sleigh__nose" cx="160.5" cy="16" r="2.2" />
+	<circle cx="16" cy="22" r="8" />
+	<circle cx="31" cy="25" r="8.5" />
+	<circle cx="35" cy="13.5" r="4.6" />
+	<path d="M31 11L39 10L45 4L41 10Z" />
+	<circle cx="45" cy="4" r="1.8" />
+	<path d="M2 26Q2 42 18 42L50 42Q60 42 62 29L57 29Q55 35 47 35L22 35Q12 35 11 26Z" />
+	<path class="sleigh__line" d="M-2 48Q4 52 12 50L56 50Q64 50 66 44M18 42L16 50M48 42L48 50" />
+</svg>`;
+---
+
+<div
+	class="seasonal-christmas"
+	data-seasonal
+	aria-hidden="true"
+	data-seasonal-christmas
+	data-snowflakes={snowflakes}
+>
+	{snowflakes > 0 && <canvas class="snow" data-snow />}
+
+	<!-- La guirnalda la dibuja el script: depende del ancho de la ventana. -->
+	{lights && <div class="xmas-lights" data-lights-box />}
+
+	{
+		gifts && (
+			<div class="gifts">
+				<svg viewBox="0 0 172 120" set:html={`<ellipse class="snow-drift" cx="86" cy="116" rx="85" ry="5" />${giftsSvg}`} />
+			</div>
+		)
+	}
+
+	{
+		tree && (
+			<div class="tree">
+				<svg viewBox="0 0 120 160">
+					<ellipse class="snow-drift" cx="60" cy="155" rx="58" ry="5" />
+					<rect class="tree__trunk" x="52" y="132" width="16" height="22" rx="2" />
+					<path class="tree__tier" d="M60 62L110 136Q60 146 10 136Z" />
+					<path class="tree__shade" d="M60 62L110 136Q86 142 60 143Z" />
+					<path class="tree__tier" d="M60 38L96 96Q60 105 24 96Z" />
+					<path class="tree__shade" d="M60 38L96 96Q79 101 60 102Z" />
+					<path class="tree__tier" d="M60 16L84 62Q60 70 36 62Z" />
+					<path class="tree__shade" d="M60 16L84 62Q72 66 60 67Z" />
+					<path class="tree__garland" d="M42 58Q62 68 80 56M28 92Q60 106 93 90M16 130Q58 148 106 128" />
+					{
+						ORNAMENTS.map(([cx, cy, color], i) => (
+							<circle
+								class={`tree__ornament gift__ribbon--${color}`}
+								cx={cx}
+								cy={cy}
+								r="4"
+								style={`animation-delay: -${(i * 0.7) % 3}s`}
+							/>
+						))
+					}
+					<polygon class="tree__star" points={starPoints} />
+				</svg>
+			</div>
+		)
+	}
+
+	{sleigh && <template data-sleigh-template set:html={sleighSvg} />}
+</div>
+
+<style is:global>
+	.seasonal-christmas {
+		--xmas-red: #c8372d;
+		--xmas-red-dark: #962820;
+		--xmas-green: #2f7d45;
+		--xmas-green-dark: #1f5a31;
+		--xmas-blue: #3f7fc4;
+		--xmas-blue-dark: #2c5d93;
+		--xmas-gold: #e2ae3a;
+		--xmas-gold-dark: #b9881f;
+		--xmas-trunk: #6b4a2f;
+		--xmas-wire: color-mix(in srgb, var(--ink) 55%, transparent);
+		/* En tema claro la nieve blanca no se vería sobre el papel: va azulada. */
+		--snow: #8fa6bf;
+		--snow-cap: #ffffff;
+		--snow-edge: color-mix(in srgb, var(--ink) 14%, transparent);
+		--sleigh: color-mix(in srgb, var(--ink) 80%, transparent);
+
+		position: fixed;
+		inset: 0;
+		/* Encima de la cabecera (20) y la barra de lectura (30); debajo del
+		   enlace "saltar al contenido" (100). */
+		z-index: 40;
+		overflow: hidden;
+		pointer-events: none;
+		contain: strict;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-theme='light']) .seasonal-christmas {
+			--snow: #eef1f5;
+			--snow-cap: #e9edf2;
+		}
+	}
+
+	:root[data-theme='dark'] .seasonal-christmas {
+		--snow: #eef1f5;
+		--snow-cap: #e9edf2;
+	}
+
+	/* ---- Nieve -------------------------------------------------------- */
+	.seasonal-christmas .snow {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		/* El script lee este color para pintar los copos. */
+		color: var(--snow);
+	}
+
+	/* ---- Luces -------------------------------------------------------- */
+	.seasonal-christmas .xmas-lights {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+	}
+
+	.seasonal-christmas .xmas-lights svg {
+		display: block;
+		overflow: visible;
+	}
+
+	.seasonal-christmas .lights__wire {
+		fill: none;
+		stroke: var(--xmas-wire);
+		stroke-width: 1.4;
+	}
+
+	.seasonal-christmas .bulb__cap {
+		fill: var(--xmas-wire);
+	}
+
+	.seasonal-christmas .bulb__glass {
+		fill: currentColor;
+		filter: drop-shadow(0 0 4px currentColor);
+	}
+
+	.seasonal-christmas .bulb--red {
+		color: var(--xmas-red);
+	}
+
+	.seasonal-christmas .bulb--gold {
+		color: var(--xmas-gold);
+	}
+
+	.seasonal-christmas .bulb--green {
+		color: var(--xmas-green);
+	}
+
+	.seasonal-christmas .bulb--blue {
+		color: var(--xmas-blue);
+	}
+
+	/* ---- Regalos ------------------------------------------------------ */
+	.seasonal-christmas .gifts,
+	.seasonal-christmas .tree {
+		position: absolute;
+		bottom: 0;
+	}
+
+	.seasonal-christmas .gifts {
+		left: clamp(4px, 1.5vw, 16px);
+		width: clamp(96px, 12vw, 172px);
+	}
+
+	.seasonal-christmas .tree {
+		right: clamp(4px, 1.5vw, 16px);
+		width: clamp(70px, 9vw, 130px);
+	}
+
+	.seasonal-christmas .gifts svg,
+	.seasonal-christmas .tree svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+
+	.seasonal-christmas .gift--red .gift__box {
+		fill: var(--xmas-red);
+	}
+	.seasonal-christmas .gift--red .gift__lid {
+		fill: var(--xmas-red-dark);
+	}
+	.seasonal-christmas .gift--green .gift__box {
+		fill: var(--xmas-green);
+	}
+	.seasonal-christmas .gift--green .gift__lid {
+		fill: var(--xmas-green-dark);
+	}
+	.seasonal-christmas .gift--blue .gift__box {
+		fill: var(--xmas-blue);
+	}
+	.seasonal-christmas .gift--blue .gift__lid {
+		fill: var(--xmas-blue-dark);
+	}
+	.seasonal-christmas .gift--gold .gift__box {
+		fill: var(--xmas-gold);
+	}
+	.seasonal-christmas .gift--gold .gift__lid {
+		fill: var(--xmas-gold-dark);
+	}
+
+	.seasonal-christmas .gift__ribbon--gold {
+		fill: var(--xmas-gold);
+	}
+	.seasonal-christmas .gift__ribbon--red {
+		fill: var(--xmas-red);
+	}
+	.seasonal-christmas .gift__ribbon--blue {
+		fill: var(--xmas-blue);
+	}
+
+	.seasonal-christmas .snow-cap,
+	.seasonal-christmas .snow-drift {
+		fill: var(--snow-cap);
+		stroke: var(--snow-edge);
+		stroke-width: 0.8;
+	}
+
+	/* ---- Árbol -------------------------------------------------------- */
+	.seasonal-christmas .tree__trunk {
+		fill: var(--xmas-trunk);
+	}
+
+	.seasonal-christmas .tree__tier {
+		fill: var(--xmas-green);
+	}
+
+	.seasonal-christmas .tree__shade {
+		fill: var(--xmas-green-dark);
+	}
+
+	.seasonal-christmas .tree__garland {
+		fill: none;
+		stroke: var(--xmas-gold);
+		stroke-width: 2.2;
+		stroke-linecap: round;
+		stroke-dasharray: 0 5.5;
+	}
+
+	.seasonal-christmas .tree__ornament {
+		filter: drop-shadow(0 0 2px rgb(255 255 255 / 0.5));
+	}
+
+	.seasonal-christmas .tree__star {
+		fill: var(--xmas-gold);
+		filter: drop-shadow(0 0 5px var(--xmas-gold));
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+
+	/* ---- Trineo ------------------------------------------------------- */
+	.seasonal-christmas .sleigh {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 180px;
+		will-change: transform;
+	}
+
+	.seasonal-christmas .sleigh-art {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+		fill: var(--sleigh);
+	}
+
+	.seasonal-christmas .sleigh__line {
+		fill: none;
+		stroke: var(--sleigh);
+		stroke-width: 1.3;
+		stroke-linecap: round;
+	}
+
+	.seasonal-christmas .sleigh__line--thick {
+		stroke-width: 4.5;
+	}
+
+	.seasonal-christmas .sleigh__line--legs {
+		stroke-width: 2.2;
+	}
+
+	.seasonal-christmas .sleigh__line--reins {
+		stroke-width: 0.8;
+	}
+
+	.seasonal-christmas .sleigh__nose {
+		fill: var(--xmas-red);
+		filter: drop-shadow(0 0 3px var(--xmas-red));
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.seasonal-christmas .bulb__glass {
+			animation: bulb-blink 2.4s ease-in-out infinite;
+		}
+
+		.seasonal-christmas .tree__ornament {
+			animation: ornament-twinkle 3s ease-in-out infinite;
+		}
+
+		.seasonal-christmas .tree__star {
+			animation: star-pulse 2.8s ease-in-out infinite;
+		}
+
+		.seasonal-christmas .sleigh-art {
+			animation: sleigh-bob 0.9s ease-in-out infinite alternate;
+		}
+
+		.seasonal-christmas .sleigh__nose {
+			animation: bulb-blink 1.2s ease-in-out infinite;
+		}
+	}
+
+	@keyframes bulb-blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.3;
+		}
+	}
+
+	@keyframes ornament-twinkle {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.6;
+		}
+	}
+
+	@keyframes star-pulse {
+		0%,
+		100% {
+			transform: scale(1) rotate(0deg);
+		}
+		50% {
+			transform: scale(1.12) rotate(8deg);
+		}
+	}
+
+	@keyframes sleigh-bob {
+		from {
+			transform: translateY(-2px);
+		}
+		to {
+			transform: translateY(2px);
+		}
+	}
+
+	@media print {
+		.seasonal-christmas {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	import { cloneInto, howMany, isSmallScreen, prefersReducedMotion, rand, sleep, trackPointer } from './shared';
+
+	const root = document.querySelector<HTMLElement>('[data-seasonal-christmas]');
+
+	if (root) {
+		// Las luces se dibujan siempre; con movimiento reducido quedan fijas
+		// (sin parpadeo) y no hay nieve cayendo ni trineo.
+		lights(root);
+		if (!prefersReducedMotion()) {
+			snow(root);
+			sleigh(root);
+		}
+	}
+
+	// ---- Guirnalda de luces ------------------------------------------------
+	// Un cable que cuelga en ondas de lado a lado, con una bombilla en el punto
+	// más bajo de cada onda. El parpadeo va en tres grupos desfasados, así que
+	// parece que la luz "corre" por la guirnalda.
+	function lights(root: HTMLElement) {
+		const box = root.querySelector<HTMLElement>('[data-lights-box]');
+		if (!box) return;
+
+		const COLORS = ['red', 'gold', 'green', 'blue'];
+		// Poco colgante: la guirnalda va sobre la cabecera y no debe tapar el menú.
+		const TOP = 2;
+		const SAG = 18;
+
+		let drawnWidth = 0;
+		const draw = () => {
+			const w = window.innerWidth;
+			if (w === drawnWidth) return;
+			drawnWidth = w;
+
+			const n = Math.max(5, Math.round(w / 70));
+			const gap = w / n;
+			const bulbY = (TOP + SAG) / 2; // punto más bajo de la curva cuadrática
+			let wire = `M0 ${TOP}`;
+			let bulbs = '';
+			for (let i = 0; i < n; i++) {
+				const mid = (i + 0.5) * gap;
+				wire += `Q${mid.toFixed(1)} ${SAG} ${((i + 1) * gap).toFixed(1)} ${TOP}`;
+				const tilt = ((i * 37) % 25) - 12;
+				bulbs +=
+					`<g class="bulb bulb--${COLORS[i % COLORS.length]}" transform="translate(${mid.toFixed(1)} ${bulbY}) rotate(${tilt}) scale(0.85)">` +
+					`<rect class="bulb__cap" x="-2.6" y="-1" width="5.2" height="5" rx="1" />` +
+					`<path class="bulb__glass" style="animation-delay:-${(i % 3) * 0.8}s" d="M0 3.5C-4.6 7 -4.8 14 0 19C4.8 14 4.6 7 0 3.5Z" />` +
+					`</g>`;
+			}
+			box.innerHTML = `<svg width="${w}" height="34" viewBox="0 0 ${w} 34"><path class="lights__wire" d="${wire}" />${bulbs}</svg>`;
+		};
+
+		draw();
+		let timer = 0;
+		window.addEventListener('resize', () => {
+			clearTimeout(timer);
+			timer = window.setTimeout(draw, 150);
+		});
+	}
+
+	// ---- Nieve ------------------------------------------------------------
+	// Un canvas a pantalla completa. Cada copo cae a su ritmo (los grandes, más
+	// rápido), se mece de lado a lado y lo empuja un viento suave que cambia
+	// con el tiempo. Los copos se apartan del puntero.
+	function snow(root: HTMLElement) {
+		const canvas = root.querySelector<HTMLCanvasElement>('[data-snow]');
+		const ctx = canvas?.getContext('2d');
+		if (!canvas || !ctx) return;
+
+		const pointer = trackPointer();
+		let w = 0;
+		let h = 0;
+		let color = '#fff';
+
+		const resize = () => {
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			w = window.innerWidth;
+			h = window.innerHeight;
+			canvas.width = w * dpr;
+			canvas.height = h * dpr;
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		};
+		// El color sale del CSS, que cambia con el tema claro/oscuro.
+		const readColor = () => {
+			color = getComputedStyle(canvas).color;
+		};
+		resize();
+		readColor();
+		window.addEventListener('resize', resize);
+		new MutationObserver(readColor).observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['data-theme'],
+		});
+		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColor);
+
+		type Flake = {
+			x: number;
+			y: number;
+			r: number;
+			vy: number;
+			sway: number;
+			phase: number;
+			freq: number;
+			crystal: boolean;
+			rot: number;
+			spin: number;
+			alpha: number;
+		};
+
+		const make = (y: number): Flake => {
+			const r = rand(0.8, 3.4);
+			return {
+				x: rand(0, w),
+				y,
+				r,
+				vy: 16 + r * 13 + rand(0, 10),
+				sway: rand(6, 22),
+				phase: rand(0, Math.PI * 2),
+				freq: rand(0.6, 1.6),
+				// Algunos de los grandes se dibujan como cristal de seis puntas.
+				crystal: r > 2.4 && Math.random() < 0.5,
+				rot: rand(0, Math.PI),
+				spin: rand(-0.8, 0.8),
+				alpha: 0.45 + (r / 3.4) * 0.5,
+			};
+		};
+
+		// Al cargar ya hay nieve repartida, no una cortina que baja desde arriba.
+		const flakes = Array.from({ length: howMany(Number(root.dataset.snowflakes) || 0) }, () =>
+			make(rand(-h * 0.3, h)),
+		);
+
+		const REPEL = 90;
+		let t = 0;
+		let last = performance.now();
+
+		const frame = (now: number) => {
+			const dt = Math.min((now - last) / 1000, 0.05);
+			last = now;
+			t += dt;
+			const wind = Math.sin(t * 0.07) * 14 + Math.sin(t * 0.23) * 6;
+
+			ctx.clearRect(0, 0, w, h);
+			ctx.fillStyle = color;
+			ctx.strokeStyle = color;
+			ctx.lineWidth = 0.9;
+
+			for (const s of flakes) {
+				s.phase += s.freq * dt;
+				s.rot += s.spin * dt;
+				s.x += (wind * (s.r / 2) + Math.sin(s.phase) * s.sway) * dt;
+				s.y += s.vy * dt;
+
+				const dx = s.x - pointer.x;
+				const dy = s.y - pointer.y;
+				const d2 = dx * dx + dy * dy;
+				if (d2 < REPEL * REPEL) {
+					const d = Math.sqrt(d2) || 1;
+					const push = (1 - d / REPEL) * 180 * dt;
+					s.x += (dx / d) * push;
+					s.y += (dy / d) * push;
+				}
+
+				if (s.y > h + 8) Object.assign(s, make(-8));
+				if (s.x > w + 10) s.x = -10;
+				else if (s.x < -10) s.x = w + 10;
+
+				ctx.globalAlpha = s.alpha;
+				ctx.beginPath();
+				if (s.crystal) {
+					const R = s.r * 1.7;
+					for (let k = 0; k < 3; k++) {
+						const a = s.rot + (k * Math.PI) / 3;
+						ctx.moveTo(s.x - Math.cos(a) * R, s.y - Math.sin(a) * R);
+						ctx.lineTo(s.x + Math.cos(a) * R, s.y + Math.sin(a) * R);
+					}
+					ctx.stroke();
+				} else {
+					ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+					ctx.fill();
+				}
+			}
+			requestAnimationFrame(frame);
+		};
+		if (flakes.length) requestAnimationFrame(frame);
+	}
+
+	// ---- Trineo -----------------------------------------------------------
+	// Cada tanto cruza de izquierda a derecha por la parte alta, en un arco
+	// suave y ladeándose según sube o baja.
+	async function sleigh(root: HTMLElement) {
+		const template = root.querySelector<HTMLTemplateElement>('[data-sleigh-template]');
+		if (!template) return;
+
+		await sleep(rand(6000, 10000));
+		for (;;) {
+			const el = cloneInto(template, 'sleigh');
+			root.append(el);
+			const w = window.innerWidth;
+			const h = window.innerHeight;
+			const span = w + 260;
+			const y0 = h * rand(0.12, 0.3);
+			const lift = rand(30, 70);
+			const scale = isSmallScreen() ? 0.65 : rand(0.85, 1.05);
+			const frames = Array.from({ length: 31 }, (_, k) => {
+				const t = k / 30;
+				const x = -220 + t * span;
+				const y = y0 - lift * Math.sin(t * Math.PI);
+				const tilt = Math.atan((-lift * Math.PI * Math.cos(t * Math.PI)) / span);
+				return { transform: `translate3d(${x}px, ${y}px, 0) rotate(${tilt}rad) scale(${scale})` };
+			});
+			const duration = (span / rand(110, 150)) * 1000;
+			await el.animate(frames, { duration, easing: 'linear', fill: 'both' }).finished.catch(() => {});
+			el.remove();
+			await sleep(rand(25000, 50000));
+		}
+	}
+</script>

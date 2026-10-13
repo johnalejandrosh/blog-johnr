@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import SeasonalOverlay from '../components/seasonal/SeasonalOverlay.astro';
 import Newsletter from '../components/Newsletter.astro';
 import PostCard from '../components/PostCard.astro';
 import PostCover from '../components/PostCover.astro';
@@ -189,6 +190,7 @@ const minutes = readingTime(post.body);
 		</main>
 
 		<Footer />
+		<SeasonalOverlay />
 
 		<script>
 			// --- Barra de progreso del artículo -------------------------------------
