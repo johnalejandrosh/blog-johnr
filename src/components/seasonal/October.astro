@@ -1,0 +1,838 @@
+---
+// Tema de octubre: arañas que cruzan la pantalla, otras que bajan colgadas de
+// su hilo, telarañas en las esquinas, murciélagos, calabazas con vela y algún
+// fantasma. Todo va en una capa fija por encima de la página que ignora el
+// ratón: se ve encima, pero los clics pasan de largo.
+//
+// Los colores salen de los tokens del sitio (`--ink`, `--accent`), así que la
+// araña es tinta oscura en tema claro y grafito claro en tema oscuro.
+
+interface Props {
+	walkers: number;
+	hanging: number;
+	webs: boolean;
+	bats: boolean;
+	pumpkins: boolean;
+	ghosts: boolean;
+}
+
+const { walkers, hanging, webs, bats, pumpkins, ghosts } = Astro.props;
+
+// Telaraña de esquina: radios desde (0,0) y anillos que se comban un poco hacia
+// la esquina, como cuando el hilo cede. La irregularidad es fija (sin random)
+// para que el HTML sea el mismo en cada build.
+const R = 170;
+const SPOKES = 7;
+const RINGS = [24, 48, 75, 104, 136];
+const angles = Array.from({ length: SPOKES }, (_, i) => (i / (SPOKES - 1)) * (Math.PI / 2));
+const point = (r: number, a: number) => [r * Math.cos(a), r * Math.sin(a)] as const;
+const f = (n: number) => n.toFixed(1);
+
+const webPath = [
+	...angles.map((a) => {
+		const [x, y] = point(R, a);
+		return `M0 0L${f(x)} ${f(y)}`;
+	}),
+	...RINGS.map((ring, k) =>
+		angles
+			.slice(1)
+			.map((a, i) => {
+				const r1 = ring * (1 + 0.05 * Math.sin(i * 2.3 + k));
+				const r2 = ring * (1 + 0.05 * Math.sin((i + 1) * 2.3 + k));
+				const [x1, y1] = point(r1, angles[i]);
+				const [x2, y2] = point(r2, a);
+				const [cx, cy] = [((x1 + x2) / 2) * 0.86, ((y1 + y2) / 2) * 0.86];
+				return `${i === 0 ? `M${f(x1)} ${f(y1)}` : ''}Q${f(cx)} ${f(cy)} ${f(x2)} ${f(y2)}`;
+			})
+			.join(''),
+	),
+].join('');
+
+// Araña vista desde arriba, mirando hacia arriba; el script la gira según hacia
+// dónde camina. Las patas van en dos grupos alternos, como camina una araña de
+// verdad: cuatro apoyadas y cuatro en el aire.
+const spiderSvg = `<svg class="spider" viewBox="-20 -20 40 40">
+	<g class="spider__legs spider__legs--a">
+		<path d="M-2.5 -4.5L-8 -11L-10 -17" />
+		<path d="M3 -3L10 -6L14 -10" />
+		<path d="M-3 -1.5L-10 1L-14 6" />
+		<path d="M2.5 0L8 7L10 14" />
+	</g>
+	<g class="spider__legs spider__legs--b">
+		<path d="M2.5 -4.5L8 -11L10 -17" />
+		<path d="M-3 -3L-10 -6L-14 -10" />
+		<path d="M3 -1.5L10 1L14 6" />
+		<path d="M-2.5 0L-8 7L-10 14" />
+	</g>
+	<ellipse class="spider__body" cx="0" cy="7" rx="5.2" ry="6.6" />
+	<ellipse class="spider__body" cx="0" cy="-2.5" rx="3.4" ry="3.6" />
+	<circle class="spider__eye" cx="-1.3" cy="-4.6" r="0.9" />
+	<circle class="spider__eye" cx="1.3" cy="-4.6" r="0.9" />
+</svg>`;
+
+// Murciélago de frente, alas abiertas. Las alas aletean con CSS.
+const batSvg = `<svg class="bat" viewBox="-30 -14 60 28">
+	<g class="bat__wings">
+		<path d="M-3 -2C-9 -11 -19 -12 -29 -5C-25 -4 -23 -1 -22 2C-19 -1 -16 -1 -14 3C-11 0 -8 0 -6 4C-5 2 -4 1 -3 2Z" />
+		<path d="M3 -2C9 -11 19 -12 29 -5C25 -4 23 -1 22 2C19 -1 16 -1 14 3C11 0 8 0 6 4C5 2 4 1 3 2Z" />
+	</g>
+	<ellipse cx="0" cy="1" rx="3.6" ry="5.5" />
+	<path d="M-3 -3L-2.6 -8L-0.8 -4.5L0.8 -4.5L2.6 -8L3 -3Z" />
+	<circle class="bat__eye" cx="-1.2" cy="-2.6" r="0.6" />
+	<circle class="bat__eye" cx="1.2" cy="-2.6" r="0.6" />
+</svg>`;
+
+// Fantasma: sábana con el borde ondulado.
+const ghostSvg = `<svg class="ghost" viewBox="0 0 60 70">
+	<path class="ghost__sheet" d="M10 35C10 15 22 4 30 4C38 4 50 15 50 35L50 62Q46 56 42 62Q38 68 34 62Q30 56 26 62Q22 68 18 62Q14 56 10 62Z" />
+	<ellipse class="ghost__face" cx="23" cy="30" rx="3" ry="4.5" />
+	<ellipse class="ghost__face" cx="37" cy="30" rx="3" ry="4.5" />
+	<ellipse class="ghost__face" cx="30" cy="42" rx="3.2" ry="4" />
+</svg>`;
+
+// Calabaza tallada. Tres gajos (los de los lados más oscuros dan volumen) y la
+// cara rellena de luz de vela, que parpadea con CSS.
+const pumpkinSvg = `<svg class="pumpkin" viewBox="0 0 100 92">
+	<path class="pumpkin__stem" d="M47 22C46 12 48 5 55 2L58 6C53 9 53 15 54 22Z" />
+	<ellipse class="pumpkin__side" cx="30" cy="56" rx="27" ry="32" />
+	<ellipse class="pumpkin__side" cx="70" cy="56" rx="27" ry="32" />
+	<ellipse class="pumpkin__body" cx="50" cy="55" rx="25" ry="34" />
+	<g class="pumpkin__face">
+		<path d="M30 47L41 47L35.5 37Z" />
+		<path d="M59 47L70 47L64.5 37Z" />
+		<path d="M47 56L53 56L50 50Z" />
+		<path d="M27 62Q50 80 73 62L68 63L64 58L60 63L55 59L50 64L45 59L40 63L36 58L32 63Z" />
+	</g>
+</svg>`;
+---
+
+<div
+	class="seasonal-october"
+	data-seasonal
+	aria-hidden="true"
+	data-seasonal-october
+	data-walkers={walkers}
+	data-hanging={hanging}
+	data-bats={bats ? '' : undefined}
+	data-ghosts={ghosts ? '' : undefined}
+>
+	{
+		webs && (
+			<>
+				<div class="web web--left">
+					<svg viewBox={`0 0 ${R} ${R}`}>
+						<path d={webPath} />
+					</svg>
+					<!-- La dueña de la telaraña: no se mueve, solo estira una pata de vez en cuando. -->
+					<div class="web__owner" set:html={spiderSvg} />
+				</div>
+				<div class="web web--right">
+					<svg viewBox={`0 0 ${R} ${R}`}>
+						<path d={webPath} />
+					</svg>
+				</div>
+			</>
+		)
+	}
+
+	{
+		pumpkins && (
+			<>
+				<div class="pumpkins pumpkins--left">
+					<div class="pumpkin-slot pumpkin-slot--big" set:html={pumpkinSvg} />
+					<div class="pumpkin-slot pumpkin-slot--small" set:html={pumpkinSvg} />
+				</div>
+				<div class="pumpkins pumpkins--right">
+					<div class="pumpkin-slot" set:html={pumpkinSvg} />
+				</div>
+			</>
+		)
+	}
+
+	<!-- Moldes que clona el script. -->
+	<template data-spider-template set:html={spiderSvg} />
+	{bats && <template data-bat-template set:html={batSvg} />}
+	{ghosts && <template data-ghost-template set:html={ghostSvg} />}
+</div>
+
+<style is:global>
+	.seasonal-october {
+		--spider: var(--ink);
+		--spider-eye: var(--accent);
+		--silk: color-mix(in srgb, var(--ink) 22%, transparent);
+		/* La calabaza es naranja en los dos temas: es la única licencia de color. */
+		--pumpkin: #dd7a26;
+		--pumpkin-side: #b95c18;
+		--pumpkin-stem: #5f6b34;
+		--candle: #ffcf6a;
+		--candle-glow: rgb(255 170 60 / 0.75);
+		--ghost-sheet: rgb(255 255 255 / 0.9);
+		--ghost-edge: color-mix(in srgb, var(--ink) 30%, transparent);
+
+		position: fixed;
+		inset: 0;
+		/* Encima de la cabecera (20) y la barra de lectura (30); debajo del
+		   enlace "saltar al contenido" (100). */
+		z-index: 40;
+		overflow: hidden;
+		pointer-events: none;
+		contain: strict;
+	}
+
+	/* ---- Telarañas ---------------------------------------------------- */
+	.seasonal-october .web {
+		position: absolute;
+		top: 0;
+		width: clamp(110px, 14vw, 170px);
+		aspect-ratio: 1;
+	}
+
+	.seasonal-october .web--left {
+		left: 0;
+	}
+
+	.seasonal-october .web--right {
+		right: 0;
+		transform: scaleX(-1);
+	}
+
+	.seasonal-october .web > svg:first-child {
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+	}
+
+	.seasonal-october .web path {
+		fill: none;
+		stroke: var(--silk);
+		stroke-width: 0.8;
+		vector-effect: non-scaling-stroke;
+	}
+
+	/* ---- Araña -------------------------------------------------------- */
+	.seasonal-october .spider {
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+	}
+
+	.seasonal-october .spider__legs {
+		fill: none;
+		stroke: var(--spider);
+		stroke-width: 1.1;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		/* El giro de las patas es alrededor del centro del cuerpo (0,0). */
+		transform-box: view-box;
+		transform-origin: 0 0;
+	}
+
+	.seasonal-october .spider__body {
+		fill: var(--spider);
+	}
+
+	.seasonal-october .spider__eye {
+		fill: var(--spider-eye);
+	}
+
+	.seasonal-october .web__owner {
+		position: absolute;
+		left: 34%;
+		top: 30%;
+		width: 26%;
+		height: 26%;
+		transform: rotate(135deg);
+	}
+
+	.seasonal-october .walker,
+	.seasonal-october .hanger__spider {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 36px;
+		height: 36px;
+		will-change: transform;
+	}
+
+	.seasonal-october .walker[hidden] {
+		display: none;
+	}
+
+	/* ---- Arañas colgantes -------------------------------------------- */
+	.seasonal-october .hanger {
+		position: absolute;
+		top: 0;
+		width: 0;
+		transform-origin: 0 0;
+	}
+
+	.seasonal-october .hanger__thread {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 1px;
+		height: 100px;
+		background: var(--silk);
+		transform-origin: 0 0;
+		transform: scaleY(0);
+	}
+
+	.seasonal-october .hanger__spider {
+		left: -18px;
+		transform: translateY(-40px);
+	}
+
+	.seasonal-october .hanger__spider .spider {
+		transform: rotate(180deg);
+	}
+
+	/* ---- Calabazas ---------------------------------------------------- */
+	.seasonal-october .pumpkins {
+		position: absolute;
+		bottom: 0;
+		display: flex;
+		align-items: flex-end;
+		gap: 2px;
+	}
+
+	.seasonal-october .pumpkins--left {
+		left: clamp(4px, 1.5vw, 16px);
+	}
+
+	.seasonal-october .pumpkins--right {
+		right: clamp(4px, 1.5vw, 16px);
+	}
+
+	.seasonal-october .pumpkin-slot {
+		width: clamp(46px, 5.5vw, 70px);
+	}
+
+	.seasonal-october .pumpkin-slot--big {
+		width: clamp(56px, 7vw, 92px);
+	}
+
+	.seasonal-october .pumpkin-slot--small {
+		width: clamp(36px, 4.2vw, 54px);
+	}
+
+	.seasonal-october .pumpkin {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+
+	.seasonal-october .pumpkin__body {
+		fill: var(--pumpkin);
+	}
+
+	.seasonal-october .pumpkin__side {
+		fill: var(--pumpkin-side);
+	}
+
+	.seasonal-october .pumpkin__stem {
+		fill: var(--pumpkin-stem);
+	}
+
+	.seasonal-october .pumpkin__face {
+		fill: var(--candle);
+		filter: drop-shadow(0 0 3px var(--candle-glow));
+	}
+
+	/* ---- Murciélagos -------------------------------------------------- */
+	.seasonal-october .bat-flyer {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 48px;
+		height: 24px;
+		will-change: transform;
+	}
+
+	.seasonal-october .bat {
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		fill: var(--spider);
+	}
+
+	.seasonal-october .bat__wings {
+		transform-box: view-box;
+		transform-origin: 0 0;
+	}
+
+	.seasonal-october .bat__eye {
+		fill: var(--spider-eye);
+	}
+
+	/* ---- Fantasma ----------------------------------------------------- */
+	.seasonal-october .ghost-flyer {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 52px;
+		will-change: transform, opacity;
+	}
+
+	.seasonal-october .ghost {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+
+	.seasonal-october .ghost__sheet {
+		fill: var(--ghost-sheet);
+		stroke: var(--ghost-edge);
+		stroke-width: 1.2;
+	}
+
+	.seasonal-october .ghost__face {
+		fill: var(--ink);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.seasonal-october .is-walking .spider__legs--a {
+			animation: spider-step var(--step, 140ms) ease-in-out infinite alternate;
+		}
+
+		.seasonal-october .is-walking .spider__legs--b {
+			animation: spider-step var(--step, 140ms) ease-in-out infinite alternate-reverse;
+		}
+
+		.seasonal-october .is-running .spider__legs {
+			animation-duration: calc(var(--step, 140ms) / 2.5);
+		}
+
+		.seasonal-october .web__owner .spider__legs--a {
+			animation: spider-twitch 7s ease-in-out infinite;
+		}
+
+		.seasonal-october .hanger.is-swinging {
+			animation: spider-swing 3.2s ease-in-out infinite alternate;
+		}
+
+		.seasonal-october .pumpkin__face {
+			animation: candle-flicker 3.1s linear infinite;
+		}
+
+		/* Cada calabaza con su vela a destiempo. */
+		.seasonal-october .pumpkin-slot--small .pumpkin__face {
+			animation-delay: -1.3s;
+		}
+
+		.seasonal-october .pumpkins--right .pumpkin__face {
+			animation-delay: -2.2s;
+		}
+
+		.seasonal-october .bat__wings {
+			animation: bat-flap 0.18s ease-in-out infinite alternate;
+		}
+
+		.seasonal-october .ghost {
+			animation: ghost-sway 2.6s ease-in-out infinite alternate;
+		}
+	}
+
+	@keyframes candle-flicker {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		12% {
+			opacity: 0.82;
+		}
+		18% {
+			opacity: 0.97;
+		}
+		43% {
+			opacity: 0.75;
+		}
+		47% {
+			opacity: 0.95;
+		}
+		71% {
+			opacity: 0.86;
+		}
+		78% {
+			opacity: 1;
+		}
+	}
+
+	@keyframes bat-flap {
+		from {
+			transform: scaleY(1);
+		}
+		to {
+			transform: scaleY(-0.45);
+		}
+	}
+
+	@keyframes ghost-sway {
+		from {
+			transform: rotate(-5deg);
+		}
+		to {
+			transform: rotate(5deg);
+		}
+	}
+
+	@keyframes spider-step {
+		from {
+			transform: rotate(-8deg);
+		}
+		to {
+			transform: rotate(8deg);
+		}
+	}
+
+	@keyframes spider-twitch {
+		0%,
+		88%,
+		100% {
+			transform: rotate(0deg);
+		}
+		91% {
+			transform: rotate(-9deg);
+		}
+		94% {
+			transform: rotate(6deg);
+		}
+	}
+
+	@keyframes spider-swing {
+		from {
+			transform: rotate(-2.5deg);
+		}
+		to {
+			transform: rotate(2.5deg);
+		}
+	}
+
+	@media print {
+		.seasonal-october {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	import { cloneInto, howMany, isSmallScreen, prefersReducedMotion, rand, sleep, trackPointer } from './shared';
+
+	const root = document.querySelector<HTMLElement>('[data-seasonal-october]');
+
+	// Con movimiento reducido solo quedan las decoraciones quietas: telarañas,
+	// su araña y las calabazas.
+	if (root && !prefersReducedMotion()) start(root);
+
+	function start(root: HTMLElement) {
+		const SIZE = 36;
+
+		const template = root.querySelector<HTMLTemplateElement>('[data-spider-template]')!;
+		const makeSpider = (className: string) => cloneInto(template, className);
+
+		// Las arañas huyen del puntero.
+		const pointer = trackPointer();
+		const near = (x: number, y: number, radius: number) =>
+			Math.hypot(x - pointer.x, y - pointer.y) < radius;
+
+		// ---- Arañas caminantes ---------------------------------------------
+		// Cada una entra por un borde, da unos cuantos saltos entre puntos al
+		// azar (con pausas, como hacen las de verdad) y sale por otro borde.
+		// Gira poco a poco hacia su destino, así que traza curvas y no rectas.
+		type Walker = {
+			el: HTMLElement;
+			x: number;
+			y: number;
+			angle: number;
+			speed: number;
+			scale: number;
+			tx: number;
+			ty: number;
+			hops: number;
+			exiting: boolean;
+			state: 'away' | 'walk' | 'pause';
+			until: number;
+			fleeUntil: number;
+		};
+
+		const inside = () => {
+			const m = 48;
+			return [rand(m, window.innerWidth - m), rand(m, window.innerHeight - m)] as const;
+		};
+
+		// Un punto fuera de la pantalla, en cualquiera de los cuatro bordes.
+		const outside = () => {
+			const w = window.innerWidth;
+			const h = window.innerHeight;
+			// Más lejos que el umbral de "fuera" de `step`, para que desaparezca antes
+			// de llegar y no dé la vuelta.
+			const pad = SIZE * 2.5;
+			switch (Math.floor(Math.random() * 4)) {
+				case 0:
+					return [rand(0, w), -pad] as const;
+				case 1:
+					return [w + pad, rand(0, h)] as const;
+				case 2:
+					return [rand(0, w), h + pad] as const;
+				default:
+					return [-pad, rand(0, h)] as const;
+			}
+		};
+
+		const spawn = (s: Walker) => {
+			[s.x, s.y] = outside();
+			[s.tx, s.ty] = inside();
+			s.angle = Math.atan2(s.ty - s.y, s.tx - s.x);
+			s.speed = rand(38, 75);
+			s.scale = rand(0.7, 1.15);
+			s.hops = Math.floor(rand(2, 6));
+			s.exiting = false;
+			s.state = 'walk';
+			s.el.style.setProperty('--step', `${Math.round(6500 / s.speed)}ms`);
+			s.el.hidden = false;
+		};
+
+		const walkers: Walker[] = Array.from({ length: howMany(Number(root.dataset.walkers) || 0) }, (_, i) => {
+			const el = makeSpider('walker');
+			el.hidden = true;
+			root.append(el);
+			// Entran escalonadas: la primera enseguida, las demás poco a poco.
+			return {
+				el,
+				x: 0,
+				y: 0,
+				angle: 0,
+				speed: 0,
+				scale: 1,
+				tx: 0,
+				ty: 0,
+				hops: 0,
+				exiting: false,
+				state: 'away',
+				until: performance.now() + 800 + i * rand(2500, 5000),
+				fleeUntil: 0,
+			};
+		});
+
+		const step = (s: Walker, now: number, dt: number) => {
+			if (s.state === 'away') {
+				if (now >= s.until) spawn(s);
+				return;
+			}
+
+			// Susto: si el puntero se acerca, sale corriendo en dirección contraria.
+			if (near(s.x, s.y, 110)) {
+				const d = Math.hypot(s.x - pointer.x, s.y - pointer.y) || 1;
+				s.tx = s.x + ((s.x - pointer.x) / d) * 260;
+				s.ty = s.y + ((s.y - pointer.y) / d) * 260;
+				s.fleeUntil = now + 900;
+				s.state = 'walk';
+			}
+
+			if (s.state === 'pause') {
+				if (now < s.until) return;
+				s.state = 'walk';
+				[s.tx, s.ty] = inside();
+			}
+
+			const fleeing = now < s.fleeUntil;
+			const desired = Math.atan2(s.ty - s.y, s.tx - s.x);
+			let diff = desired - s.angle;
+			diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+			const maxTurn = (fleeing ? 9 : 2.6) * dt;
+			s.angle += Math.max(-maxTurn, Math.min(maxTurn, diff)) + rand(-0.6, 0.6) * dt;
+
+			const speed = s.speed * (fleeing ? 3.2 : 1);
+			s.x += Math.cos(s.angle) * speed * dt;
+			s.y += Math.sin(s.angle) * speed * dt;
+
+			const w = window.innerWidth;
+			const h = window.innerHeight;
+			const edge = SIZE * 1.5;
+			const gone = s.x < -edge || s.y < -edge || s.x > w + edge || s.y > h + edge;
+
+			if (gone && (s.exiting || fleeing)) {
+				s.state = 'away';
+				s.until = now + rand(2500, 9000);
+				s.el.hidden = true;
+				return;
+			}
+
+			if (Math.hypot(s.tx - s.x, s.ty - s.y) < 10 && !fleeing) {
+				if (s.exiting) {
+					[s.tx, s.ty] = outside();
+				} else if (--s.hops <= 0) {
+					s.exiting = true;
+					[s.tx, s.ty] = outside();
+				} else if (Math.random() < 0.6) {
+					s.state = 'pause';
+					s.until = now + rand(600, 2800);
+				} else {
+					[s.tx, s.ty] = inside();
+				}
+			}
+		};
+
+		const render = (s: Walker, now: number) => {
+			const walking = s.state === 'walk';
+			s.el.classList.toggle('is-walking', walking);
+			s.el.classList.toggle('is-running', walking && now < s.fleeUntil);
+			s.el.style.transform =
+				`translate3d(${s.x - SIZE / 2}px, ${s.y - SIZE / 2}px, 0) ` +
+				`rotate(${s.angle + Math.PI / 2}rad) scale(${s.scale})`;
+		};
+
+		let last = performance.now();
+		const frame = (now: number) => {
+			// Si la pestaña estuvo oculta, no recuperar el tiempo perdido de golpe.
+			const dt = Math.min((now - last) / 1000, 0.05);
+			last = now;
+			for (const s of walkers) {
+				step(s, now, dt);
+				if (s.state !== 'away') render(s, now);
+			}
+			requestAnimationFrame(frame);
+		};
+		if (walkers.length) requestAnimationFrame(frame);
+
+		// ---- Arañas colgantes ----------------------------------------------
+		// Bajan desde arriba soltando hilo, se balancean un rato y vuelven a
+		// subir. Si el puntero se les acerca, suben de golpe.
+		const move = (el: HTMLElement, from: string, to: string, duration: number, easing: string) => {
+			el.style.transform = to;
+			return el.animate([{ transform: from }, { transform: to }], { duration, easing }).finished.catch(
+				() => {},
+			);
+		};
+
+		const hang = async (delay: number) => {
+			const el = document.createElement('div');
+			el.className = 'hanger';
+			const thread = document.createElement('div');
+			thread.className = 'hanger__thread';
+			const spider = makeSpider('hanger__spider');
+			el.append(thread, spider);
+			root.append(el);
+
+			await sleep(delay);
+			for (;;) {
+				const x = rand(0.1, 0.9) * window.innerWidth;
+				const drop = rand(0.18, 0.42) * window.innerHeight;
+				el.style.left = `${x}px`;
+
+				spider.classList.add('is-walking');
+				const down = drop * 9;
+				await Promise.all([
+					move(thread, 'scaleY(0)', `scaleY(${(drop + 8) / 100})`, down, 'ease-out'),
+					move(spider, 'translateY(-40px)', `translateY(${drop}px)`, down, 'ease-out'),
+				]);
+				spider.classList.remove('is-walking');
+				el.classList.add('is-swinging');
+
+				// Colgada un rato, salvo que la asusten.
+				const until = performance.now() + rand(6000, 12000);
+				let scared = false;
+				while (performance.now() < until) {
+					await sleep(150);
+					if (near(x, drop + SIZE / 2, 90)) {
+						scared = true;
+						break;
+					}
+				}
+
+				el.classList.remove('is-swinging');
+				spider.classList.add('is-walking');
+				const up = scared ? 450 : drop * 14;
+				const easing = scared ? 'ease-in' : 'ease-in-out';
+				await Promise.all([
+					move(thread, `scaleY(${(drop + 8) / 100})`, 'scaleY(0)', up, easing),
+					move(spider, `translateY(${drop}px)`, 'translateY(-40px)', up, easing),
+				]);
+				spider.classList.remove('is-walking');
+
+				await sleep(rand(7000, 18000));
+			}
+		};
+
+		for (let i = 0; i < howMany(Number(root.dataset.hanging) || 0); i++) {
+			hang(3000 + i * rand(6000, 10000));
+		}
+
+		// ---- Murciélagos ---------------------------------------------------
+		// Cada tanto cruza una bandada pequeña por la mitad de arriba, subiendo
+		// y bajando en ondas. Cada murciélago se borra al salir de la pantalla.
+		const batTemplate = root.querySelector<HTMLTemplateElement>('[data-bat-template]');
+
+		const launchBat = (leftToRight: boolean, y0: number, duration: number, delay: number) => {
+			const el = cloneInto(batTemplate!, 'bat-flyer');
+			root.append(el);
+			const w = window.innerWidth;
+			const scale = rand(0.7, 1.1);
+			const amp = rand(18, 45);
+			const waves = rand(2, 4);
+			const phase = rand(0, Math.PI * 2);
+			const frames = Array.from({ length: 25 }, (_, k) => {
+				const t = k / 24;
+				const x = leftToRight ? -60 + t * (w + 120) : w + 60 - t * (w + 120);
+				const y = y0 + Math.sin(t * waves * Math.PI * 2 + phase) * amp;
+				return { transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})` };
+			});
+			el.animate(frames, { duration, delay, easing: 'linear', fill: 'both' })
+				.finished.catch(() => {})
+				.then(() => el.remove());
+		};
+
+		const flyBats = async () => {
+			await sleep(rand(4000, 8000));
+			for (;;) {
+				const flock = Math.floor(rand(1, isSmallScreen() ? 3 : 5));
+				const leftToRight = Math.random() < 0.5;
+				const base = rand(0.08, 0.4) * window.innerHeight;
+				const duration = rand(6500, 10000);
+				for (let i = 0; i < flock; i++) {
+					launchBat(leftToRight, base + rand(-40, 40), duration * rand(0.9, 1.1), i * rand(200, 600));
+				}
+				await sleep(duration + rand(9000, 22000));
+			}
+		};
+
+		if (batTemplate && root.dataset.bats !== undefined) flyBats();
+
+		// ---- Fantasma ------------------------------------------------------
+		// Aparece por la parte baja, sube despacio meciéndose y se desvanece.
+		const ghostTemplate = root.querySelector<HTMLTemplateElement>('[data-ghost-template]');
+
+		const haunt = async () => {
+			await sleep(rand(12000, 20000));
+			for (;;) {
+				const el = cloneInto(ghostTemplate!, 'ghost-flyer');
+				root.append(el);
+				const w = window.innerWidth;
+				const h = window.innerHeight;
+				const x0 = rand(0.1, 0.85) * w;
+				const drift = rand(-120, 120);
+				const y0 = h * rand(0.6, 0.8);
+				const rise = h * rand(0.3, 0.45);
+				const scale = rand(0.8, 1.15);
+				const frames = Array.from({ length: 21 }, (_, k) => {
+					const t = k / 20;
+					const x = x0 + drift * t + Math.sin(t * Math.PI * 3) * 18;
+					const y = y0 - rise * t;
+					const opacity = t < 0.15 ? t / 0.15 : t > 0.75 ? (1 - t) / 0.25 : 1;
+					return { transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`, opacity: opacity * 0.85 };
+				});
+				await el
+					.animate(frames, { duration: rand(7000, 10000), easing: 'ease-in-out', fill: 'both' })
+					.finished.catch(() => {});
+				el.remove();
+				await sleep(rand(18000, 35000));
+			}
+		};
+
+		if (ghostTemplate && root.dataset.ghosts !== undefined) haunt();
+	}
+</script>
